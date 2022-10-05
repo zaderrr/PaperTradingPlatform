@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parse": "^0.1.0",
+    "browserify-fs": "^1.0.0",
+    "cookie-parser": "^1.4.6",
+    "csv": "^6.0.5",
+    "express": "^4.17.2",
+    "isomorphic-ws": "^4.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^4.4.0",
+    "node-fetch": "^2.6.7",
+    "papaparse": "^5.3.1",
+    "passport": "^0.5.2",
+    "passport-coinbase": "^0.1.4",
+    "react-router-dom": "^6.2.1",
+    "request": "^2.88.2",
+    "sqlite3": "^5.1.1",
+    "ws": "^8.5.0"
+  }
+}

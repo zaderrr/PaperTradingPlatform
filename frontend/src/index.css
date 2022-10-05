@@ -1,0 +1,12 @@
+
+@import url("https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css");
+html,body{
+  height: 100%;
+  font-family: 'Work Sans', sans-serif;
+  overflow: hidden;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
