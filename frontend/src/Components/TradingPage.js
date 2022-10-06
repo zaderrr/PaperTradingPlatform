@@ -68,7 +68,7 @@ state = {
         }
         
   }
-  ShowSideMenu() {
+  ShowSideMenu = () => {
     if (this.state.SlideMenu === false){
         document.getElementById("menuslider").style.display = 'block';
         this.setState({SlideMenu : true});
@@ -105,6 +105,10 @@ state = {
     document.getElementById("AccountModal").classList.remove("is-active")
   }
 
+  ShowChart() 
+  {
+    this.setState({PanelToShow : "Chart"})
+  }
 
   componentDidUpdate(prevProp) {
     if (prevProp.stock !== this.props.stock){
@@ -128,7 +132,7 @@ state = {
        <div id='IconMenu'>
            <aside className='Menu'>
             <ul className="menu-list">
-                <li><a><span className="icon"><FontAwesomeIcon icon={faHouse} /></span></a></li>
+                <li><a onClick={() => this.ShowChart()}><span className="icon"><FontAwesomeIcon icon={faHouse} /></span></a></li>
                 <li><a onClick={() => this.ShowSideMenu()}><span className="icon"><FontAwesomeIcon icon={faMagnifyingGlass} /></span></a></li>
                 <li><a><span className="icon" onClick={() => this.ShowPortfolio()}><FontAwesomeIcon icon={faChartPie} /></span></a></li>
             </ul>
@@ -149,11 +153,11 @@ state = {
         <div >AMZN $123</div>
         </div>   
         <div id='menuslider'>
-          <Search StockSelected={this.StockSelected}></Search>
+          <Search StockSelected={this.StockSelected} ShowSideMenu={this.ShowSideMenu}></Search>
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow == "Portfolio" && <Portfolio></Portfolio>}
-              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection}></StockPanel>}
+              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} ></StockPanel>}
             </div>
             </div>
      </div>

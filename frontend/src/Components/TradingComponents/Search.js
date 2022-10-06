@@ -132,7 +132,7 @@ class Search extends Component {
         </tbody>
       </table>
      </div>
-     <div className='EmptyClick' onClick={this.CloseSearch}></div>
+     <div className='EmptyClick' onClick={this.props.ShowSideMenu}></div>
      </div>
     );
   }
