@@ -10,7 +10,8 @@ async function CreateDB()
   db.serialize(() => {
     db.run("CREATE TABLE Users (USER_ID INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT, Password TEXT) ");  
     db.run("CREATE TABLE Auth (FK_USER_ID INTEGER NOT NULL, Token varchar(255))"); 
-    db.run("CREATE TABLE Trades (TRADE_ID INTEGER PRIMARY KEY AUTOINCREMENT, FK_USER_ID INTEGER NOT NULL, Instrument varchar(255)) NOT NULL, Amount REAL NOT NULL, Cost REAL NOT NULL"); 
+    db.run("CREATE TABLE Trades (TRADE_ID INTEGER PRIMARY KEY AUTOINCREMENT, FK_USER_ID INTEGER NOT NULL, Instrument varchar(255) NOT NULL, Amount REAL NOT NULL, Cost REAL NOT NULL)"); 
+    db.run("CREATE TABLE Holdings(FK_USER_ID INTEGER NOT NULL, Instrument varchar(255) NOT NULL, Amount REAL NOT NULL, Average_Price	REAL)");
   });
 db.close();
 }
@@ -25,10 +26,10 @@ async function BuyStock() {
 // Checks database for Auth Token
 async function CheckSession (SessionID, res){
     var client = await ConnectDatabase();
-    var found = await IsValidAuth(SessionID, client,res);
+    var found = await IsValidAuth(SessionID, client,res, InitAuthCheck);
 }
   
-async function IsValidAuth(SessionID, client, res)
+/*/async function IsValidAuth(SessionID, client, res)
 {
   await client.get("SELECT * FROM Auth WHERE Token=?", SessionID, (err,row) => {
     if (row.FK_USER_ID == undefined){
@@ -39,8 +40,26 @@ async function IsValidAuth(SessionID, client, res)
       res.send({Valid : true});
     }
   });
+}/*/
+async function IsValidAuth(SessionID, client, res, Callback)
+{
+  await client.get("SELECT * FROM Auth WHERE Token=?", SessionID,(err, row) => {
+    if (row.FK_USER_ID == undefined){
+      Callback(row, res,client, false)
+    }else {
+      Callback(row, res,client, true)
+    }  
+    //CB(row, res, client)
+  });
 }
 
+
+
+function InitAuthCheck (row, res, client, auth) 
+{
+  client.close();
+  res.send({Valid : auth});
+}
 
   async function IsRegistered(client, data,res){
     await client.get("SELECT * FROM Users WHERE Name=?",data["Name"], (err,row) => {
@@ -100,25 +119,31 @@ async function IsValidAuth(SessionID, client, res)
   
   }
 
-  async function GetInitialData (AccountSession) {
-    const dbName = "Users"
-    var client = await ConnectDatabase(dbName);
-    var db = client.db(dbName);
-    var accName = "";
-    var filteredDocs = await db.collection('Sessions').find({ Session : AccountSession }).toArray();
-    if (filteredDocs.length == 1 ) {
-        accName = filteredDocs[0]['Name']
+  async function GetInitialData (Token, connection) {
+    var client = await ConnectDatabase();
+    IsValidAuth(Token, client,connection, DataAuthCB)
+  }
+
+  function DataAuthCB(row, res, client, auth) 
+  {
+    if (auth){
+      var userid = row.FK_USER_ID;
+      client.all("SELECT * FROM Holdings WHERE FK_USER_ID=?",userid, (err,rows) => {
+        var data = []
+        rows.forEach(row => {
+          data.push([row.Instrument, row.Amount,row.Average_Price])
+        });
+        var msg  = {
+          MessageType : "Holdings",
+          Holdings : data
+        }
+        res.send(JSON.stringify(msg));
+      });
+      
     }
     else{
-        
-    }
-    await client.close();
-    client = await ConnectDatabase("UserAccounts");
-    db = client.db("UserAccounts");
-    filteredDocs = await db.collection('TradingAccount').find({ Name : accName }).toArray();
-    await client.close();
-    return filteredDocs[0]['CashFunds']
 
+    }
   }
   
   module.exports = { CheckSession, RegisterUser, GetInitialData};

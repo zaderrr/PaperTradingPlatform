@@ -68,18 +68,19 @@ ws.on('connection', function(w){
 });
 
 async function InitMessage(w, msg) {
-  //var Funds = await DataBase.GetInitialData(msg['SessionAuth']);
+  if (msg['Auth'] != null){ 
+    await DataBase.GetInitialData(msg['Auth'], w);
+  }
   var Stock = msg["Stock"];
   AddSubscription(msg, w, Stock);
   var stockPrice = await GetStockPrice(Stock)
-  var data = await BuildInitReturnMsg(stockPrice, 10000);
+  var data = await BuildInitReturnMsg(stockPrice);
   w.send(JSON.stringify(data))
 }
 
-async function BuildInitReturnMsg(stockPrice, Funds ) {
+async function BuildInitReturnMsg(stockPrice) {
   var data = {
     MessageType : "InitRes",
-    CashFunds : Funds,
     Price : stockPrice
   }
   return data;

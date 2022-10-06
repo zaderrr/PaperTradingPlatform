@@ -16,7 +16,8 @@ state = {
   PanelToShow : "Chart",
   FullName : "Apple Inc.",
   connection : null,
-  BuyPrice : null
+  BuyPrice : null,
+  Holdings : []
 };
   componentDidMount() {
     this.IsValidSession();
@@ -25,7 +26,7 @@ state = {
     connection.onopen = function () {
       var msg = {
         MessageType : "Init",
-        SessionAuth : window.localStorage.getItem('Auth'),
+        Auth : window.localStorage.getItem('Auth'),
         Stock : _this.state.stock
       }
       connection.send(JSON.stringify(msg));
@@ -39,18 +40,19 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
-
       if (msg['MessageType'] === "InitRes"){
-        var cash = msg['CashFunds'];
-        window.sessionStorage.setItem('CashFunds', cash);
         _this.setState({BuyPrice : msg['Price']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
+      }else if (msg["MessageType"] == "Holdings")
+      {
+        _this.setState({Holdings : msg["Holdings"]});
       }
       
     };
 
     this.setState({connection : connection});
+    
   }
 
   IsValidSession = async() => {
@@ -99,7 +101,7 @@ state = {
     {
         document.getElementsByClassName("modal")[0].classList.add("is-active");
     }else{
-      alert("logged in")
+      alert(this.state.LoggedIn)
     }
 
   }
@@ -153,7 +155,7 @@ state = {
         <div >AMZN $123</div>
         <div >AMZN $123</div>
         <div >AMZN $123</div>
-        <div >AMZN $1d23</div>
+        <div >AMZN $123</div>
         <div >AMZN $123</div>
         <div >AMZN $123</div>
         </div>   
