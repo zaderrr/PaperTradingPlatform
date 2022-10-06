@@ -52,7 +52,6 @@ state = {
   }
 
   IsValidSession = async() => {
-    console.log(window.localStorage.getItem('Auth'))
     const response = await fetch('/CheckSession', {
         method: "POST",
             headers: {
@@ -61,9 +60,8 @@ state = {
             }
           });
         var body = await response.json();
-        console.log(body['Valid'])
         if (body['Valid'] === true){
-              
+              this.setState({LoggedIn : true})
         }
         else{
             
@@ -90,7 +88,7 @@ state = {
     {
         document.getElementsByClassName("modal")[0].classList.add("is-active");
     }else{
-      document.getElementsByClassName("modal")[0].classList.add("is-active");
+      alert("logged in")
     }
 
   }

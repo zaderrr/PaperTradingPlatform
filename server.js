@@ -16,10 +16,6 @@ const fs = require('fs');
 // This displays message that the server running and listening to specified port
 app.listen(port, () => console.log(`Listening on port ${port}`)); //Line 6
 
-// create a GET route
-app.get('/express_backend', (req, res) => { //Line 9
-  res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }); //Line 10
-}); //Line 11
 
 
 app.post('/register', async (req, res) => {
@@ -45,8 +41,3 @@ app.post('/buyStock', async (req, res) => {
   var data = req.cookies['SessionID']
   
 });
-
-
-function RespondToAuth(req, res){
-  res.send({Valid : found})
-}

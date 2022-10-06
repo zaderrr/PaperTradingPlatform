@@ -10,6 +10,7 @@ async function CreateDB()
   db.serialize(() => {
     db.run("CREATE TABLE Users (USER_ID INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT, Password TEXT) ");  
     db.run("CREATE TABLE Auth (FK_USER_ID INTEGER NOT NULL, Token varchar(255))"); 
+    db.run("CREATE TABLE Trades (TRADE_ID INTEGER PRIMARY KEY AUTOINCREMENT, FK_USER_ID INTEGER NOT NULL, Instrument varchar(255)) NOT NULL, Amount REAL NOT NULL, Cost REAL NOT NULL"); 
   });
 db.close();
 }
@@ -23,7 +24,6 @@ async function BuyStock() {
 
 // Checks database for Auth Token
 async function CheckSession (SessionID, res){
-
     var client = await ConnectDatabase();
     var found = await IsValidAuth(SessionID, client,res);
 }
@@ -45,12 +45,10 @@ async function IsValidAuth(SessionID, client, res)
   async function IsRegistered(client, data,res){
     await client.get("SELECT * FROM Users WHERE Name=?",data["Name"], (err,row) => {
       if (row == undefined){
-        console.log("here")
         AddUserToDatabase(client,data["Name"], data["Password"],res)
       }else {
-        console.log("USER REGISTERED")
         client.close();
-        //res.send({Valid : true});
+        RespondToRegister(res,true);
       }
     });
   }
@@ -63,7 +61,6 @@ async function IsValidAuth(SessionID, client, res)
 
   async function AddUserToDatabase(client,user, pass,res) {
     var hash = await bcrypt.hash(pass, 0, null);
-    console.log(hash)
     var userId = 0
     client.run("INSERT INTO Users (Name, Password) VALUES (?,?)", [user,hash], (err,row) => {
       client.get("SELECT * FROM Users WHERE Name=?",user, (err,row) => {
@@ -78,12 +75,15 @@ async function IsValidAuth(SessionID, client, res)
     var Token = await bcrypt.hash(user + hash,10, null)
     await client.run("INSERT INTO Auth (FK_USER_ID, Token) VALUES (?,?)", [userid, Token]);  
     client.close();
-    res.send({
-      Status : true,
-      Auth : Token
-    });
+    RespondToRegister(res,true, Token)
   }
 
+  function RespondToRegister(res, status, Token=null) {
+    res.send({
+      Status : status,
+      Auth : Token
+    })
+  }
 
   async function AddFunds(accName){
     const dbName = "UserAccounts";
