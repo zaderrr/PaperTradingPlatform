@@ -82,6 +82,13 @@ state = {
     this.setState({PanelToShow: "Portfolio"});
   }
 
+  StockSelected = (e) => {
+    this.setState({
+      FullName : e.currentTarget.firstChild.getAttribute("fullname"),
+       stock : e.currentTarget.firstChild.innerHTML
+      });
+  }
+
   UserButtonClicked() 
   {
     if (!this.state.LoggedIn)
@@ -101,6 +108,7 @@ state = {
 
   componentDidUpdate(prevProp) {
     if (prevProp.stock !== this.props.stock){
+      console.log(this.state)
       this.setState({stock : this.props.stock});
     }
   }
@@ -136,13 +144,12 @@ state = {
         <div >AMZN $123</div>
         <div >AMZN $123</div>
         <div >AMZN $123</div>
-        <div >AMZN $123</div>
         <div >AMZN $1d23</div>
         <div >AMZN $123</div>
         <div >AMZN $123</div>
         </div>   
         <div id='menuslider'>
-          <Search></Search>
+          <Search StockSelected={this.StockSelected}></Search>
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow == "Portfolio" && <Portfolio></Portfolio>}

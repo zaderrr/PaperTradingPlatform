@@ -1,6 +1,9 @@
 import React, { Component} from 'react';
 import './Search.css'
 class Search extends Component {
+  constructor(props) {
+    super(props);
+  }
 
   SearchCompanyList = async (value) => {
     var url = "https://finbox.com/_/api/v5/search-v2/company?q=" + value;
@@ -20,6 +23,7 @@ class Search extends Component {
     var tbody = document.getElementById("stocktablebody");
     var counter = 0;
     tbody.childNodes.forEach(element => {
+      element.firstChild.setAttribute("fullname", stocks[counter]["name"]);  
       element.firstChild.innerHTML = stocks[counter]["ticker"]
       counter++;
     })
@@ -46,12 +50,13 @@ class Search extends Component {
   CloseSearch() {
     document.getElementById("menuslider").style.display = 'none';
   }
+
   render() {
     return (
     <div className='SlideClick'>
      <div className='SearchMenu'>
       <div>
-       <input className="SearchBar" id='StockSearchBar' autoComplete="off" type="text" onKeyDown={this.StockSearch} placeholder="Search for a market..."></input>
+       <input className="SearchBar" id='StockSearchBar' autoComplete="off" type="text" onInput={this.StockSearch} placeholder="Search for a market..."></input>
       </div>
        <table id="testtt" className="table">
         <thead>
@@ -63,11 +68,12 @@ class Search extends Component {
           </tr>
         </thead>
         <tbody id='stocktablebody'>
-          <tr>
-            <td>TSLA</td>
+          <tr onClick={this.props.StockSelected}>
+            <td Fullname="">TSLA</td>
             <td>504</td>
             <td>506</td>
             <td>12</td>
+            
           </tr>
           <tr>
             <td>TSLA</td>
