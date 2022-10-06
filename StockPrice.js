@@ -1,5 +1,5 @@
 const fetch = require("node-fetch")
-import config from 'config.js'
+const config = 'config.js'
 
 
 const secret = config.APP_SECRET;

@@ -69,7 +69,7 @@ class Search extends Component {
         </thead>
         <tbody id='stocktablebody'>
           <tr onClick={this.props.StockSelected}>
-            <td Fullname="">TSLA</td>
+            <td >TSLA</td>
             <td>504</td>
             <td>506</td>
             <td>12</td>

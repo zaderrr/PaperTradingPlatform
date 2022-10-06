@@ -25,7 +25,7 @@ state = {
     connection.onopen = function () {
       var msg = {
         MessageType : "Init",
-        SessionAuth : Cookies.get("SessionID"),
+        SessionAuth : window.localStorage.getItem('Auth'),
         Stock : _this.state.stock
       }
       connection.send(JSON.stringify(msg));
@@ -39,13 +39,15 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
-      if (msg['MessageType'] == "InitRes"){
+
+      if (msg['MessageType'] === "InitRes"){
         var cash = msg['CashFunds'];
         window.sessionStorage.setItem('CashFunds', cash);
         _this.setState({BuyPrice : msg['Price']});
-      }else {
+      }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
       }
+      
     };
 
     this.setState({connection : connection});
@@ -86,6 +88,8 @@ state = {
     this.setState({
       FullName : e.currentTarget.firstChild.getAttribute("fullname"),
        stock : e.currentTarget.firstChild.innerHTML
+      }, () => {
+        this.ChangeSubscription();
       });
   }
 
@@ -99,7 +103,14 @@ state = {
     }
 
   }
-
+  ChangeSubscription() {
+    var msg  =
+    {
+      MessageType : "ChangeSubscription",
+      Stock : this.state.stock
+    }
+    this.state.connection.send(JSON.stringify(msg));
+  }
   CloseModal() 
   {
     document.getElementById("AccountModal").classList.remove("is-active")
@@ -110,12 +121,6 @@ state = {
     this.setState({PanelToShow : "Chart"})
   }
 
-  componentDidUpdate(prevProp) {
-    if (prevProp.stock !== this.props.stock){
-      console.log(this.state)
-      this.setState({stock : this.props.stock});
-    }
-  }
   
 
 

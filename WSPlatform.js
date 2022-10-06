@@ -5,20 +5,31 @@ const DataBase = require("./DataBaseHelper.js")
 const StockHelper = require("./StockPrice.js")
 var SubscribedStocks = {} 
 var SocketStocks = {}
+var SC = require("./ServerConfig.json")
 
 function GetSboxPrice() {
-  return stockPrice = Math.floor(Math.random() * 100)
+  return Math.floor(Math.random() * 100)
 }
+
+const interval = SC["Stockprice"]["Interval"]
+const PriceType = SC["Stockprice"]["Prices"]
+
+async function GetStockPrice(stock)
+{
+  if (PriceType == "Sandbox"){
+      return GetSboxPrice();
+    }
+    else {
+      // TODO: Implement live stock price from APIS.
+      //stockPrice = await StockHelper.GetStockPrice(stock) 
+    }
+}
+
 setInterval(async () => {
   var tableOut = {}
   for (let s in SubscribedStocks){
     if (SubscribedStocks[s].length != 0){
-      if (process.argv[2] != "sbox"){
-      stockPrice = await StockHelper.GetStockPrice(s) 
-      }
-      else {
-        stockPrice = GetSboxPrice();
-      }
+      var stockPrice = await GetStockPrice(s)
       var stockMSG = {
         MessageType : "StockPrice",
         Price : stockPrice
@@ -31,7 +42,7 @@ setInterval(async () => {
   }
   console.clear();
   console.table(tableOut)
-}, 5000);
+}, interval);
 
 
 ws.on('connection', function(w){
@@ -57,15 +68,11 @@ ws.on('connection', function(w){
 });
 
 async function InitMessage(w, msg) {
-  var Funds = await DataBase.GetInitialData(msg['SessionAuth']);
+  //var Funds = await DataBase.GetInitialData(msg['SessionAuth']);
   var Stock = msg["Stock"];
   AddSubscription(msg, w, Stock);
-  if (process.argv[2] != "sbox"){
-  var stockPrice = await StockHelper.GetStockPrice(Stock); 
-  }else{
-    var stockPrice = GetSboxPrice();
-  }
-  var data = await BuildInitReturnMsg(stockPrice, Funds);
+  var stockPrice = await GetStockPrice(Stock)
+  var data = await BuildInitReturnMsg(stockPrice, 10000);
   w.send(JSON.stringify(data))
 }
 
@@ -80,11 +87,7 @@ async function BuildInitReturnMsg(stockPrice, Funds ) {
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);
   AddSubscription(msg, w, msg["Stock"]);
-  if (process.argv[2] != "sbox"){
-    var stockPrice = await StockHelper.GetStockPrice(Stock); 
-    }else{
-      var stockPrice = GetSboxPrice();
-  }
+  var stockPrice = await GetStockPrice(msg["Stock"])
   var data = await BuildNewSubReturnMsg(stockPrice)
   w.send(JSON.stringify(data))
 }
