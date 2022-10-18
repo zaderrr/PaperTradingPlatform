@@ -1,4 +1,4 @@
-const fetch = require("node-fetch")
+
 const config = 'config.js'
 
 
