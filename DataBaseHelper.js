@@ -2,6 +2,7 @@ const { MongoClient } = require('mongodb');
 const bcrypt = require("bcryptjs");
 const sqlite3 = require('sqlite3').verbose();
 const { json } = require('express/lib/response');
+const sql = require('sqlite');
 
 
 async function CreateDB()
@@ -17,91 +18,69 @@ db.close();
 }
 
 
-async function BuyStock() {       
-    const dbName = "UserAccounts"
-    const client = await ConnectDatabase(dbName);
-  
-  }
-
 // Checks database for Auth Token
-async function CheckSession (SessionID, res){
+async function CheckSession (SessionID){
     var client = await ConnectDatabase();
-    var found = await IsValidAuth(SessionID, client,res, InitAuthCheck);
+    var found = await IsValidAuth(SessionID, client);
+    client.close();
+    return found;
 }
   
-/*/async function IsValidAuth(SessionID, client, res)
+// Find auths with matching tokens. Will return undefined if none exist.
+async function IsValidAuth(SessionID, client, NeedUserId=null)
 {
-  await client.get("SELECT * FROM Auth WHERE Token=?", SessionID, (err,row) => {
-    if (row.FK_USER_ID == undefined){
-      client.close();
-      res.send({Valid : false});
-    }else {
-      client.close();
-      res.send({Valid : true});
+  var authFound = await client.get("SELECT * FROM Auth WHERE Token=?", SessionID);
+  if (authFound == undefined){
+    if (NeedUserId != null){
+      return ([false,authFound.FK_USER_ID])
     }
-  });
-}/*/
-async function IsValidAuth(SessionID, client, res, Callback)
-{
-  await client.get("SELECT * FROM Auth WHERE Token=?", SessionID,(err, row) => {
-    if (row.FK_USER_ID == undefined){
-      Callback(row, res,client, false)
+    return false
+  }else{
+    if (NeedUserId != null){
+      return ([true,authFound.FK_USER_ID])
+    }
+    return true
+  }
+}
+
+
+  async function IsRegistered(client, data,){
+    var row = await client.get("SELECT * FROM Users WHERE Name=?",data["Name"]);
+    if (row == undefined){
+      return AddUserToDatabase(client,data["Name"], data["Password"])
     }else {
-      Callback(row, res,client, true)
-    }  
-    //CB(row, res, client)
-  });
-}
-
-
-
-function InitAuthCheck (row, res, client, auth) 
-{
-  client.close();
-  res.send({Valid : auth});
-}
-
-  async function IsRegistered(client, data,res){
-    await client.get("SELECT * FROM Users WHERE Name=?",data["Name"], (err,row) => {
-      if (row == undefined){
-        AddUserToDatabase(client,data["Name"], data["Password"],res)
-      }else {
-        client.close();
-        RespondToRegister(res,true);
-      }
-    });
+      client.close();
+      return RegisterReturnData(false);
+    }
   }
 
-
-  async function RegisterUser(data,res){
+  async function RegisterUser(data){
     var client = await ConnectDatabase();
-    IsRegistered(client, data,res);
+    return await IsRegistered(client, data);
   }
 
-  async function AddUserToDatabase(client,user, pass,res) {
+  async function AddUserToDatabase(client,user, pass) {
     var hash = await bcrypt.hash(pass, 0, null);
-    var userId = 0
-    client.run("INSERT INTO Users (Name, Password) VALUES (?,?)", [user,hash], (err,row) => {
-      client.get("SELECT * FROM Users WHERE Name=?",user, (err,row) => {
-        userId = row.USER_ID;
-        AddTokenToDatabase(client,user,hash,userId,res)
-      });
-    }); 
+    var insert = await client.run("INSERT INTO Users (Name, Password) VALUES (?,?)", [user,hash]);
+    var userId = insert.lastID;
+    return AddTokenToDatabase(client,user,hash,userId)
   }
   
-  async function AddTokenToDatabase(client, user,hash, userid,res)
+  async function AddTokenToDatabase(client, user,hash, userid)
   {
     var Token = await bcrypt.hash(user + hash,10, null)
     await client.run("INSERT INTO Auth (FK_USER_ID, Token) VALUES (?,?)", [userid, Token]);  
     client.close();
-    RespondToRegister(res,true, Token)
+    return RegisterReturnData(true, Token)
   }
 
-  function RespondToRegister(res, status, Token=null) {
-    res.send({
+  function RegisterReturnData(status, Token=null) {
+    data = {
       Status : status,
       Auth : Token
-    })
+    }
+    return data;
+    
   }
 
   async function AddFunds(accName){
@@ -114,36 +93,29 @@ function InitAuthCheck (row, res, client, auth)
   
   
   async function ConnectDatabase() {
-    var client = new sqlite3.Database('PLATFORM.db')
+    var client = await sql.open({
+      filename: 'PLATFORM.db',
+      driver: sqlite3.Database
+    });
     return client
-  
   }
 
-  async function GetInitialData (Token, connection) {
+  async function GetInitialData (Token) {
     var client = await ConnectDatabase();
-    IsValidAuth(Token, client,connection, DataAuthCB)
-  }
-
-  function DataAuthCB(row, res, client, auth) 
-  {
-    if (auth){
-      var userid = row.FK_USER_ID;
-      client.all("SELECT * FROM Holdings WHERE FK_USER_ID=?",userid, (err,rows) => {
-        var data = []
-        rows.forEach(row => {
-          data.push([row.Instrument, row.Amount,row.Average_Price])
-        });
-        var msg  = {
-          MessageType : "Holdings",
-          Holdings : data
-        }
-        res.send(JSON.stringify(msg));
-      });
-      
+    var authed = await IsValidAuth(Token, client, true)
+    if (authed[0]){
+      var holdings = await GetHoldingsData(client, authed[1]);
+      client.close();
+      return {authed : true, holdings : holdings}
     }
     else{
-
+      return {authed : false};
     }
+  }
+
+  async function GetHoldingsData(client, userid) 
+  {
+     return await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=?",userid);
   }
   
   module.exports = { CheckSession, RegisterUser, GetInitialData};

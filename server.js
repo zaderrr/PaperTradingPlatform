@@ -20,19 +20,22 @@ app.listen(port, () => console.log(`Listening on port ${port}`)); //Line 6
 
 app.post('/register', async (req, res) => {
   var data = req.body
-  var usereg = await DataBase.RegisterUser(data, res)
-
+  var usereg = await DataBase.RegisterUser(data)
+  console.log(usereg)
+  res.send(JSON.stringify(usereg))
 });
 
 app.post('/CheckSession', async (req, res) => {
   var data = req.headers['authorisation']
   var found = false;
   if (data != "null"){
-    await DataBase.CheckSession(data, res)
+    var ValidSession = await DataBase.CheckSession(data, res)
+    if (ValidSession != undefined){
+      res.send({Valid : true});
+      return;
+    }
   }
-  else{
-    res.send({Valid : false})
-  }
+  res.send({Valid : false})
 
 });
 

@@ -6,7 +6,6 @@ import './TradingComponents/Search.css';
 import StockPanel from './TradingComponents/StockPanel';
 import Portfolio from './Portfolio';
 import Register from './AccountComps/Register';
-import Cookies from 'js-cookie';
 import Search from './TradingComponents/Search';
 class TradingPage extends Component {
 state = {
@@ -41,18 +40,14 @@ state = {
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
       if (msg['MessageType'] === "InitRes"){
-        _this.setState({BuyPrice : msg['Price']});
+        _this.setState({BuyPrice : msg['Price'], Holdings : msg["Holdings"]});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
-      }else if (msg["MessageType"] == "Holdings")
-      {
-        _this.setState({Holdings : msg["Holdings"]});
       }
-      
     };
 
     this.setState({connection : connection});
-    
+
   }
 
   IsValidSession = async() => {
@@ -68,7 +63,7 @@ state = {
               this.setState({LoggedIn : true})
         }
         else{
-            
+          this.setState({LoggedIn : false})
         }
         
   }
@@ -82,7 +77,6 @@ state = {
     }
   }
   ShowPortfolio() {
-    console.log("Portfolio clicked")
     this.setState({PanelToShow: "Portfolio"});
   }
 
@@ -163,7 +157,7 @@ state = {
           <Search StockSelected={this.StockSelected} ShowSideMenu={this.ShowSideMenu}></Search>
         </div>
             <div className='MainArea'>
-              {this.state.PanelToShow == "Portfolio" && <Portfolio></Portfolio>}
+              {this.state.PanelToShow == "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
               {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} ></StockPanel>}
             </div>
             </div>

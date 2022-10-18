@@ -5,7 +5,8 @@ const DataBase = require("./DataBaseHelper.js")
 const StockHelper = require("./StockPrice.js")
 var SubscribedStocks = {} 
 var SocketStocks = {}
-var SC = require("./ServerConfig.json")
+var SC = require("./ServerConfig.json");
+const { GridFSBucketReadStream } = require('mongodb');
 
 function GetSboxPrice() {
   return Math.floor(Math.random() * 100)
@@ -68,19 +69,30 @@ ws.on('connection', function(w){
 });
 
 async function InitMessage(w, msg) {
+  var authed = false;
+  var holdings = null;
   if (msg['Auth'] != null){ 
-    await DataBase.GetInitialData(msg['Auth'], w);
+    holdings = await DataBase.GetInitialData(msg['Auth'], w);
+    if (holdings["authed"] != false){
+      authed = true;
+      holdings = holdings["holdings"]
+    }
+  }
+  else{
+    authed = false;
   }
   var Stock = msg["Stock"];
   AddSubscription(msg, w, Stock);
   var stockPrice = await GetStockPrice(Stock)
-  var data = await BuildInitReturnMsg(stockPrice);
+  var data = await BuildInitReturnMsg(stockPrice, holdings);
   w.send(JSON.stringify(data))
 }
 
-async function BuildInitReturnMsg(stockPrice) {
+async function BuildInitReturnMsg(stockPrice, holdings=null, authed) {
   var data = {
     MessageType : "InitRes",
+    Authed : authed,
+    Holdings : holdings,
     Price : stockPrice
   }
   return data;
