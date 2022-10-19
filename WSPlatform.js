@@ -70,7 +70,7 @@ ws.on('connection', function(w){
 
 async function InitMessage(w, msg) {
   var authed = false;
-  var holdings = null;
+  var holdings = [];
   if (msg['Auth'] != null){ 
     holdings = await DataBase.GetInitialData(msg['Auth'], w);
     if (holdings["authed"] != false){

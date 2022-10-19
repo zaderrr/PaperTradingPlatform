@@ -31,7 +31,17 @@ class StockPanel extends Component {
     document.getElementById(header).classList.add('is-active');
   }
 
-  
+  ToggleBuySell() {
+    
+    var ButtonParent = document.getElementById("BuySellButtons");
+    ButtonParent.childNodes.forEach(element => {
+      element.classList.toggle("is-active");
+      element.classList.toggle("is-dark");
+    });;
+
+   
+
+  }
 
   render() {
     return (
@@ -64,7 +74,7 @@ class StockPanel extends Component {
           <div className='BuyPanelAndInfo'>
             <div className='ChartOrOther'>
               <div className='HeaderOptions'>
-                <div className="tabs is-medium">
+                <div className="tabs is-medium HeaderTabs">
                   <ul>
                     <li className="is-active" id='ChartHeader'><a onClick={() => this.ChangeTab(<ChartComp stock={this.props.stock}></ChartComp>, "ChartHeader")}>Chart</a></li>
                     <li id='FinancialsHeader'><a onClick={() => this.ChangeTab(<FinancialsComp></FinancialsComp>, "FinancialsHeader")} >Financials</a></li>
@@ -78,11 +88,7 @@ class StockPanel extends Component {
               </div>
             </div>
             <div className='BuyPanel'>
-              <div className='PanelBuyButtons'>
-                <button className='button'>BUY</button>
-                <button className='button'>Sell</button>
-              </div>
-              <div className="tabs">
+              <div className="tabs is-centered test" >
                 <ul>
                   <li className="is-active" ><a>Market</a></li>
                   <li><a>Limit</a></li>
@@ -90,11 +96,19 @@ class StockPanel extends Component {
                   <li><a>Strategy</a></li>
                 </ul>
               </div>
-              <div className='OrderTypeFields' align="right">
+
+              <div className='PanelBuyButtons'>
+                <div className="buttons has-addons" id="BuySellButtons">
+                  <button onClick={this.ToggleBuySell} className="button is-active BuySellButton">Buy</button>
+                  <button onClick={this.ToggleBuySell} className="button is-dark BuySellButton">Sell</button>
+                </div>
+              </div>
+              <div className='OrderTypeFields'>
                 <div>
                   <MarketOrder BuyPrice={this.props.BuyPrice}></MarketOrder>
                 </div>
               </div>
+              
             </div>
           </div>
         </div>

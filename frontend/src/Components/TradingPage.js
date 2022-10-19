@@ -16,7 +16,7 @@ state = {
   FullName : "Apple Inc.",
   connection : null,
   BuyPrice : null,
-  Holdings : []
+  Holdings : null
 };
   componentDidMount() {
     this.IsValidSession();
@@ -39,8 +39,9 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
+
       if (msg['MessageType'] === "InitRes"){
-        _this.setState({BuyPrice : msg['Price'], Holdings : msg["Holdings"]});
+        _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
       }

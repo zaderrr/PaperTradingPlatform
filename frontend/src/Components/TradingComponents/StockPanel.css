@@ -18,12 +18,42 @@
     flex-direction: column;
     width: 80%;
 }
-.tabs ul {
-    border: 0px;
+
+.tabs  {
+  width: 100%;
+  outline: none;
+  
+  
 }
+.tabs.HeaderTabs ul 
+{
+    border: 0px;
+
+}
+
+.OrderTypes{
+    width: 100%;
+    outline: none;
+    color: rgb(139, 139, 139);
+}
+
+
+
+.is-active a {
+    color: white;
+} 
+
+.SubtitleHeading {
+    font-size: 14px;
+}
+
 
 .tabs ul li a{
     color: rgb(139, 139, 139);
+    border: 0px;
+    
+
+
 }
 .tabs ul li a:hover{
     color: rgb(184, 184, 184);
@@ -31,6 +61,7 @@
 
 .tabs ul li.is-active a  {
     color: white;
+    
 }
 
 
@@ -56,22 +87,44 @@ strong {
 .BuyPanel{
     width: 25%;
     background-color: hsl(0, 0%, 16%);
+    text-align: center;
+    flex-direction: column;
+    display: flex;
+    align-items: center;
 }
 .PanelBuyButtons {
     margin-top: 7%;
+    margin-bottom: 7%;
+
+
+    width: 80%;
+
 }
+
+
+
+.BuySellButton {
+    width: 50%;
+    background-color: white;
+}
+
+
+input:focus{
+    outline: none;
+}
+
 
 .ChartOrOther{
     height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
+    
 }
 .HeaderOptions {
     height: 5%;
     display: flex;
     width: 100%;
-    padding-left: 20px;
     background-color: #1a1a1a;
 
 }
@@ -88,6 +141,10 @@ strong {
     height: 6%;
     display: flex;
 }
+.StockHeader strong{
+    color: #6f6f6f;
+}
+
 .StockPriceInfo {
     display: flex;
     align-items: center;
