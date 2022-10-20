@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const sqlite3 = require('sqlite3').verbose();
 const { json } = require('express/lib/response');
 const sql = require('sqlite');
+const e = require('express');
 
 
 async function CreateDB()
@@ -19,9 +20,9 @@ db.close();
 
 
 // Checks database for Auth Token
-async function CheckSession (SessionID){
+async function CheckSession (SessionID, NeedUserId=null){
     var client = await ConnectDatabase();
-    var found = await IsValidAuth(SessionID, client);
+    var found = await IsValidAuth(SessionID, client, NeedUserId);
     client.close();
     return found;
 }
@@ -31,10 +32,7 @@ async function IsValidAuth(SessionID, client, NeedUserId=null)
 {
   var authFound = await client.get("SELECT * FROM Auth WHERE Token=?", SessionID);
   if (authFound == undefined){
-    if (NeedUserId != null){
-      return ([false,authFound.FK_USER_ID])
-    }
-    return false
+      return false;
   }else{
     if (NeedUserId != null){
       return ([true,authFound.FK_USER_ID])
@@ -43,6 +41,37 @@ async function IsValidAuth(SessionID, client, NeedUserId=null)
   }
 }
 
+async function BuyStock(Amount,Stock,UserID,price){
+  var client = await ConnectDatabase();
+  var stockHoldings = await client.all("SELECT * FROM Holdings WHERE FK_USER_ID=?",[UserID]);
+  var Holdings = {}
+  console.log(Amount);
+  stockHoldings.forEach(holding => {
+    Holdings[holding["Instrument"]] = holding;
+  });
+  var totalPrice = price * Amount
+  if (Holdings["Cash"]["Amount"] >= totalPrice){
+    if (Holdings[Stock] == undefined){
+      // If user doesn't currently own the stock
+      await client.run("INSERT INTO HOLDINGS (FK_USER_ID, Instrument, Amount, Average_Price, Price_Size) VALUES (?,?,?,?,?)", [UserID,Stock,Amount,price,1])
+      
+    }else{
+      // If user does currently own the stock
+      var avgPrice = Holdings[Stock]["Average_Price"];
+      var Price_Size = Holdings[Stock]["Price_Size"];
+      Amount = Amount + Holdings[Stock]["Amount"]
+      console.log(Amount, Holdings[Stock]["Amount"])
+      avgPrice = ((avgPrice * Price_Size) + price) / (Price_Size + 1);
+      Price_Size += 1;
+      await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=?, Price_Size=? WHERE Instrument = ?",[Amount, avgPrice,Price_Size,Stock]);
+    }
+    await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ?",[Holdings["Cash"]["Amount"] - totalPrice, "Cash"]);
+    await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost) VALUES (?,?,?,?)", [UserID,Stock,Amount,price])
+
+  }
+
+  client.close();
+}
 
   async function IsRegistered(client, data,){
     var row = await client.get("SELECT * FROM Users WHERE Name=?",data["Name"]);
@@ -117,5 +146,7 @@ async function IsValidAuth(SessionID, client, NeedUserId=null)
   {
      return await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=?",userid);
   }
+
+
   
-  module.exports = { CheckSession, RegisterUser, GetInitialData};
+  module.exports = { CheckSession, RegisterUser, GetInitialData, BuyStock};

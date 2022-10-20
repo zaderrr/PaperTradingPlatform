@@ -10,8 +10,6 @@ class StockPanel extends Component {
     super(props);
     this.state = {
       InfoToShow : <ChartComp stock={props.stock}></ChartComp>,
-      connection : null,
-      BuyPrice : null
     };
 
   }
@@ -25,6 +23,7 @@ class StockPanel extends Component {
     }
   }
 
+
   ChangeTab = async(StockInfoToShow, header) => {
     this.setState({InfoToShow : StockInfoToShow});
     var selected = document.getElementsByClassName("is-active")[0].classList.remove('is-active');
@@ -32,16 +31,13 @@ class StockPanel extends Component {
   }
 
   ToggleBuySell() {
-    
     var ButtonParent = document.getElementById("BuySellButtons");
     ButtonParent.childNodes.forEach(element => {
       element.classList.toggle("is-active");
       element.classList.toggle("is-dark");
-    });;
-
-   
-
+    });
   }
+
 
   render() {
     return (
@@ -108,6 +104,8 @@ class StockPanel extends Component {
                   <MarketOrder BuyPrice={this.props.BuyPrice}></MarketOrder>
                 </div>
               </div>
+              <button onClick={this.props.BuyStock} className="button is-dark BuySellButton">Buy</button>
+                
               
             </div>
           </div>
