@@ -1,11 +1,11 @@
-input {
+input.input {
     border: transparent;
     padding: 0;
     margin: 0;
     height: 100%;
     outline: 0;
     width: 100%;
-
+    color: black;
     text-align: center;
     font-size: 20px;
 
@@ -14,14 +14,6 @@ input {
     width: 80%;
 
 }
-.MarketOrderType {
-    
-}
 
-input:focus {
-    border: 0;
-    padding: 0;
-    margin: 0;    
-    outline: 0;
 
-}
+
