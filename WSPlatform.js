@@ -55,6 +55,8 @@ ws.on('connection', function(w){
     }
     else if (MessageType == "ChangeSubscription"){
       await ChangeSubscription(w,msg);
+    }else if (MessageType == "BuyStock") {
+      await BuyStock(w, msg)
     }
   });
   
@@ -67,6 +69,17 @@ ws.on('connection', function(w){
   });
 
 });
+
+async function BuyStock(w, data){
+  var IsAuthed = await DataBase.CheckSession(data["Auth"], true);
+  if (!IsAuthed){
+    // Not authed
+    return;
+  }
+  var subbedStock = SocketStocks[w];
+  var price = GetSboxPrice();
+  var didBuy = await DataBase.BuyStock(parseInt(data['Amount']), subbedStock, IsAuthed[1], price);
+}
 
 async function InitMessage(w, msg) {
   var authed = false;

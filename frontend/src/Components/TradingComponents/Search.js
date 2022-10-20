@@ -27,21 +27,6 @@ class Search extends Component {
       element.firstChild.innerHTML = stocks[counter]["ticker"]
       counter++;
     })
-    for (let index = 0; index < stocks.length; index++) {
-      
-      /*/var tr = document.createElement("tr")
-      var tdName = document.createElement("tr")
-      tdName.innerHTML = stocks[index]["ticker"]
-      var tdLow = document.createElement("tr")
-      var tdHigh = document.createElement("tr")
-      var tdChange = document.createElement("tr")
-      tr.append(tdName);
-      tr.append(tdHigh)
-      tr.append(tdLow)
-      tr.append(tdChange)
-      document.getElementById("stocktablebody").append(tr);
-      /*/
-    }
   }
 
 

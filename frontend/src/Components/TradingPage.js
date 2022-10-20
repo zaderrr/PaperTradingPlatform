@@ -15,7 +15,7 @@ state = {
   PanelToShow : "Chart",
   FullName : "Apple Inc.",
   connection : null,
-  BuyPrice : null,
+  BuyPrice : 0,
   Holdings : null
 };
   componentDidMount() {
@@ -68,6 +68,19 @@ state = {
         }
         
   }
+
+  SendBuyRequest = async => {
+    var amnt = document.getElementById("StockAmount").value;
+    var data = {
+      MessageType : "BuyStock",
+      Auth : window.localStorage.getItem('Auth'),
+      Stock : this.state.stock,
+      Amount : amnt
+    }
+    this.state.connection.send(JSON.stringify(data))
+
+  }
+
   ShowSideMenu = () => {
     if (this.state.SlideMenu === false){
         document.getElementById("menuslider").style.display = 'block';
@@ -159,7 +172,7 @@ state = {
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow == "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
-              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} ></StockPanel>}
+              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} BuyStock={this.SendBuyRequest}></StockPanel>}
             </div>
             </div>
      </div>
