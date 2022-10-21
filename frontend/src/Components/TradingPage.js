@@ -44,8 +44,11 @@ state = {
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
+      }else if (msg["Status"] == true){
+      _this.setState({Holdings : msg['Holdings']});
       }
-    };
+
+    }
 
     this.setState({connection : connection});
 

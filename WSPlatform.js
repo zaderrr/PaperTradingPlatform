@@ -73,13 +73,25 @@ ws.on('connection', function(w){
 async function OrderStock(w, data){
   var method = data["Method"] 
   var IsAuthed = await DataBase.CheckSession(data["Auth"], true);
+  
+  rtrnMsg = {}
   if (!IsAuthed){
-    // Not authed
+    rtrnMsg = {
+      MessageType : "OrderRes",
+      Status : IsAuthed
+    }
+    w.send(JSON.stringify(data));
     return;
   }
   var price = GetSboxPrice();
   var subbedStock = data["Stock"];
-  var didBuy = await DataBase.OrderStock(parseInt(data['Amount']), subbedStock, IsAuthed[1], price, method);
+  var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
+  rtrnMsg = {
+    MessageType : "OrderRes",
+    Status : holdings[1],
+    Holdings : holdings[0]
+  }
+  w.send(JSON.stringify(rtrnMsg));
 }
 
 

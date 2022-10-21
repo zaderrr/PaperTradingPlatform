@@ -51,13 +51,15 @@ async function OrderStock(Amount,Stock,UserID,price, method){
   });
   var totalPrice = price * Amount
   var CanOrder = false
+  
   if (method == "Buy"){
-    if (Holdings["Cash"]["Amount"] >= totalPrice){CanOrder = true;}
+    if (Holdings["Cash"]["Amount"] >= totalPrice){
+      CanOrder = true;
+    }
   }else if (method == "Sell"){
-    if (Holdings[Stock] != undefined && Holdings[Stock]["Amount"] >= Amount){CanOrder = true;}
+    if (Holdings[Stock] != undefined && Holdings[Stock]["Amount"] >= Amount && Amount >=1){CanOrder = true;}
   }else{
-    console.log("You shouldn't be here")
-    CanOrder = false;
+    return undefined;
   }
   if (CanOrder){
     if (method == "Buy"){
@@ -83,8 +85,10 @@ async function OrderStock(Amount,Stock,UserID,price, method){
       await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=? WHERE Instrument = ?",[calcs[0], calcs[1],Stock]);
     }    
   }
-
+  
+  var holds = await GetHoldingsData(client, UserID);
   client.close();
+  return [holds, CanOrder];
 }
 async function OrderCalc(avgPrice, Amount,Stock, Holdings, method, trades){
   if (method == "Buy"){
