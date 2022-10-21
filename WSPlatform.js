@@ -3,17 +3,21 @@ var port = process.env.PORT || 9030;
 var ws = new Server({port: port});
 const DataBase = require("./DataBaseHelper.js")
 const StockHelper = require("./StockPrice.js")
-var SubscribedStocks = {} 
-var SocketStocks = {}
 var SC = require("./ServerConfig.json");
 const { GridFSBucketReadStream } = require('mongodb');
+
+
+var SubscribedStocks = {} 
+var SocketStocks = {}
+var StockPrices = {}
+const interval = SC["Stockprice"]["Interval"]
+const PriceType = SC["Stockprice"]["Prices"]
 
 function GetSboxPrice() {
   return Math.floor(Math.random() * 100)
 }
 
-const interval = SC["Stockprice"]["Interval"]
-const PriceType = SC["Stockprice"]["Prices"]
+
 
 async function GetStockPrice(stock)
 {
@@ -30,7 +34,8 @@ setInterval(async () => {
   var tableOut = {}
   for (let s in SubscribedStocks){
     if (SubscribedStocks[s].length != 0){
-      var stockPrice = await GetStockPrice(s)
+      var stockPrice = await GetStockPrice(s);
+      StockPrices[s] = stockPrice;
       var stockMSG = {
         MessageType : "StockPrice",
         Price : stockPrice
@@ -41,8 +46,8 @@ setInterval(async () => {
       tableOut[s] = {Subscribers : SubscribedStocks[s].length, "Current Price" : stockPrice}
     }
   }
-  //console.clear();
-  //console.table(tableOut)
+  console.clear();
+  console.table(tableOut)
 }, interval);
 
 
@@ -83,8 +88,10 @@ async function OrderStock(w, data){
     w.send(JSON.stringify(data));
     return;
   }
-  var price = GetSboxPrice();
+  
   var subbedStock = data["Stock"];
+  var price = StockPrices[subbedStock]
+  console.log(price)
   var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
   rtrnMsg = {
     MessageType : "OrderRes",
@@ -111,7 +118,7 @@ async function InitMessage(w, msg) {
   }
   var Stock = msg["Stock"];
   AddSubscription(msg, w, Stock);
-  var stockPrice = await GetStockPrice(Stock)
+  var stockPrice = StockPrices[Stock];
   var data = await BuildInitReturnMsg(stockPrice, holdings);
   w.send(JSON.stringify(data))
 }
@@ -128,7 +135,7 @@ async function BuildInitReturnMsg(stockPrice, holdings=null, authed) {
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);
   AddSubscription(msg, w, msg["Stock"]);
-  var stockPrice = await GetStockPrice(msg["Stock"])
+  var stockPrice = await StockPrices[msg["Stock"]]
   var data = await BuildNewSubReturnMsg(stockPrice)
   w.send(JSON.stringify(data))
 }
@@ -158,5 +165,6 @@ function AddSubscription(msg, w, stock) {
   }
   else {
     SubscribedStocks[stock] = [w]
+    StockPrices[stock] = GetSboxPrice();
   }
 }

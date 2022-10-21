@@ -45,7 +45,6 @@ state = {
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
       }else if (msg["Status"] == true){
-        console.log(msg["Holdings"][0].Instrument)
       _this.setState({Holdings : msg['Holdings']});
       }
 
