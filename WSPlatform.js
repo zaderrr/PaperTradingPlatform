@@ -41,8 +41,8 @@ setInterval(async () => {
       tableOut[s] = {Subscribers : SubscribedStocks[s].length, "Current Price" : stockPrice}
     }
   }
-  console.clear();
-  console.table(tableOut)
+  //console.clear();
+  //console.table(tableOut)
 }, interval);
 
 
@@ -55,9 +55,9 @@ ws.on('connection', function(w){
     }
     else if (MessageType == "ChangeSubscription"){
       await ChangeSubscription(w,msg);
-    }else if (MessageType == "BuyStock") {
-      await BuyStock(w, msg)
-    }
+    }else if (MessageType == "OrderStock") {
+      await OrderStock(w, msg)
+    } 
   });
   
   w.on('close', function() {
@@ -70,16 +70,19 @@ ws.on('connection', function(w){
 
 });
 
-async function BuyStock(w, data){
+async function OrderStock(w, data){
+  var method = data["Method"] 
   var IsAuthed = await DataBase.CheckSession(data["Auth"], true);
   if (!IsAuthed){
     // Not authed
     return;
   }
-  var subbedStock = SocketStocks[w];
   var price = GetSboxPrice();
-  var didBuy = await DataBase.BuyStock(parseInt(data['Amount']), subbedStock, IsAuthed[1], price);
+  var subbedStock = data["Stock"];
+  var didBuy = await DataBase.OrderStock(parseInt(data['Amount']), subbedStock, IsAuthed[1], price, method);
 }
+
+
 
 async function InitMessage(w, msg) {
   var authed = false;

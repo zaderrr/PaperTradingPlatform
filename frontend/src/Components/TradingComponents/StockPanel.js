@@ -104,7 +104,7 @@ class StockPanel extends Component {
                   <MarketOrder BuyPrice={this.props.BuyPrice}></MarketOrder>
                 </div>
               </div>
-              <button onClick={this.props.BuyStock} className="button is-dark BuySellButton">Buy</button>
+              <button onClick={this.props.OrderStock} className="button is-active BuySellButton">Order</button>
                 
               
             </div>

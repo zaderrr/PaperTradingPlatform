@@ -69,10 +69,12 @@ state = {
         
   }
 
-  SendBuyRequest = async => {
+  OrderStock = async => {
     var amnt = document.getElementById("StockAmount").value;
+    var OrderType = document.getElementsByClassName("button is-active BuySellButton")[0].innerHTML;
     var data = {
-      MessageType : "BuyStock",
+      MessageType : "OrderStock",
+      Method : OrderType,
       Auth : window.localStorage.getItem('Auth'),
       Stock : this.state.stock,
       Amount : amnt
@@ -172,7 +174,7 @@ state = {
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow == "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
-              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} BuyStock={this.SendBuyRequest}></StockPanel>}
+              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
      </div>
