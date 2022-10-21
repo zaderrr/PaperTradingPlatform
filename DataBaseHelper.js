@@ -177,7 +177,7 @@ async function CalcAvgPrice(trades){
 
   async function GetHoldingsData(client, userid) 
   {
-     return await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=?",userid);
+     return await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=? AND Amount is not 0.0",userid);
   }
 
 
