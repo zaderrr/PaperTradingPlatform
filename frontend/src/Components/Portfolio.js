@@ -1,9 +1,7 @@
 import React, { Component} from 'react';
 import './Portfolio.css'
 class Portfolio extends Component {
-  constructor(props) {
-    super(props);
-  }
+
   
   render() {
     return (
@@ -21,7 +19,7 @@ class Portfolio extends Component {
         </thead>
         <tbody>
         {this.props.Holdings.map(holding => 
-        <tr>
+        <tr key={holding.Instrument}>
           <td>{holding.Instrument}</td>
           <td>{holding.Amount}</td>
           <td>{holding.Average_Price}</td>

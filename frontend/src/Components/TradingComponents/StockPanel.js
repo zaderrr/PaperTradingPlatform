@@ -4,7 +4,7 @@ import ChartComp from './ChartComp.js';
 import ModelsComp from './ModelsComp.js'
 import CompareComp from './CompareComp.js'
 import FinancialsComp from './FinancialsComp.js';
-import MarketOrder from '../OrderType/MarketOrder';
+import MarketOrder from '../OrderType/MarketOrder.js';
 class StockPanel extends Component {
   constructor(props) {
     super(props);

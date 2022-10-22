@@ -1,9 +1,7 @@
 import React, { Component} from 'react';
 import './Search.css'
 class Search extends Component {
-  constructor(props) {
-    super(props);
-  }
+
 
   SearchCompanyList = async (value) => {
     var url = "https://finbox.com/_/api/v5/search-v2/company?q=" + value;
@@ -14,7 +12,7 @@ class Search extends Component {
 
   StockSearch = async () => {
     var newStock = document.getElementById("StockSearchBar").value;
-    if (document.getElementsByClassName("table")[0].style.display != 'block'){
+    if (document.getElementsByClassName("table")[0].style.display !== 'block'){
       document.getElementsByClassName("table")[0].style.display = 'block';
       document.getElementsByClassName("SearchMenu")[0].style.justifyContent = 'start';
     }

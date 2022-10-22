@@ -1,23 +1,26 @@
-import React, { Component} from 'react';
-import './TradingPage.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faMagnifyingGlass, faChartPie, faUser } from '@fortawesome/free-solid-svg-icons'
+import React from 'react';
+import './TradingPage.css';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faHouse} from '@fortawesome/free-solid-svg-icons';
+import {faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons';
+import {faChartPie} from '@fortawesome/free-solid-svg-icons';   
+import {faUser} from '@fortawesome/free-solid-svg-icons';
 import './TradingComponents/Search.css';
-import StockPanel from './TradingComponents/StockPanel';
-import Portfolio from './Portfolio';
-import Register from './AccountComps/Register';
-import Search from './TradingComponents/Search';
-class TradingPage extends Component {
+import StockPanel from './TradingComponents/StockPanel.js';
+import Portfolio from './Portfolio.js';
+import Register from './AccountComps/Register.js';
+import Search from './TradingComponents/Search.js';
+class TradingPage extends React.Component {
 state = {
-  SlideMenu : false,
-  stock : "AAPL",
-  LoggedIn : false, 
-  PanelToShow : "Chart",
-  FullName : "Apple Inc.",
-  connection : null,
-  BuyPrice : 0,
-  Holdings : null
-};
+    SlideMenu : false,
+    stock : "AAPL",
+    LoggedIn : false, 
+    PanelToShow : "Chart",
+    FullName : "Apple Inc.",
+    connection : null,
+    BuyPrice : 0,
+    Holdings : null
+  };
   componentDidMount() {
     this.IsValidSession();
     var _this = this;
@@ -44,7 +47,7 @@ state = {
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
-      }else if (msg["Status"] == true){
+      }else if (msg["Status"] === true){
       _this.setState({Holdings : msg['Holdings']});
       }
 
@@ -154,7 +157,7 @@ state = {
             <ul className="menu-list">
                 <li><a onClick={() => this.ShowChart()}><span className="icon"><FontAwesomeIcon icon={faHouse} /></span></a></li>
                 <li><a onClick={() => this.ShowSideMenu()}><span className="icon"><FontAwesomeIcon icon={faMagnifyingGlass} /></span></a></li>
-                <li><a><span className="icon" onClick={() => this.ShowPortfolio()}><FontAwesomeIcon icon={faChartPie} /></span></a></li>
+                <li><a onClick={() => this.ShowPortfolio()}><span className="icon"><FontAwesomeIcon icon={faChartPie} /></span></a></li>
             </ul>
             <ul className="menu-list">
               <li onClick={() => this.UserButtonClicked()} ><a><span className="icon"><FontAwesomeIcon icon={faUser} /></span></a></li>
@@ -176,8 +179,8 @@ state = {
           <Search StockSelected={this.StockSelected} ShowSideMenu={this.ShowSideMenu}></Search>
         </div>
             <div className='MainArea'>
-              {this.state.PanelToShow == "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
-              {this.state.PanelToShow == "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
+              {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
+              {this.state.PanelToShow === "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
      </div>
