@@ -19,7 +19,8 @@ state = {
     FullName : "Apple Inc.",
     connection : null,
     BuyPrice : 0,
-    Holdings : null
+    Holdings : null,
+    StockHistory : null
   };
   componentDidMount() {
     this.IsValidSession();
@@ -31,6 +32,7 @@ state = {
         Auth : window.localStorage.getItem('Auth'),
         Stock : _this.state.stock
       }
+      
       connection.send(JSON.stringify(msg));
     };
 
@@ -42,12 +44,15 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
-
       if (msg['MessageType'] === "InitRes"){
-        _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings']});
+        _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings'], StockHistory : msg['PrevData']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
-      }else if (msg["Status"] === true){
+      }else if (msg["MessageType"] === "ChangeSub"){
+        
+        _this.setState({BuyPrice : msg["Price"], StockHistory : msg['PrevData']})
+      }
+      else if (msg["Status"] === true){
       _this.setState({Holdings : msg['Holdings']});
       }
 
@@ -180,7 +185,7 @@ state = {
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
-              {this.state.PanelToShow === "Chart" && <StockPanel stock={this.state.stock} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
+              {this.state.PanelToShow === "Chart" && <StockPanel stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
      </div>

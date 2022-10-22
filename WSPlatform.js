@@ -91,7 +91,6 @@ async function OrderStock(w, data){
   
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
-  console.log(price)
   var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
   rtrnMsg = {
     MessageType : "OrderRes",
@@ -124,14 +123,22 @@ async function InitMessage(w, msg) {
 }
 
 async function BuildInitReturnMsg(stockPrice, holdings=null, authed) {
+  var hist = await GetRandomHistory();
   var data = {
     MessageType : "InitRes",
     Authed : authed,
     Holdings : holdings,
+    PrevData : hist,
     Price : stockPrice
   }
   return data;
 }
+
+async function GetRandomHistory(){
+ var data = [Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20)]
+  return data
+}
+
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);
   AddSubscription(msg, w, msg["Stock"]);
@@ -141,9 +148,11 @@ async function ChangeSubscription(w,msg){
 }
 
 async function BuildNewSubReturnMsg(stockPrice){
+  var hist = await GetRandomHistory();
   var data = {
-    MessageType : "StockPrice",
-    Price : stockPrice
+    MessageType : "ChangeSub",
+    Price : stockPrice,
+    PrevData :  hist
   }
   return data;
 }
