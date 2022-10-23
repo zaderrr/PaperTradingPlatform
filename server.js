@@ -26,21 +26,16 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/CheckSession', async (req, res) => {
-  var data = req.headers['authorisation']
+  var auth = req.headers['authorisation']
   var found = false;
-  if (data != "null"){
-    var ValidSession = await DataBase.CheckSession(data, res)
-    if (ValidSession != undefined){
+  if (auth != "null"){
+    var ValidSession = await DataBase.IsUserAuthed(auth)
+    if (ValidSession){
       res.send({Valid : true});
       return;
     }
   }
   res.send({Valid : false})
-
+  return
 });
 
-
-app.post('/buyStock', async (req, res) => {
-  var data = req.cookies['SessionID']
-  
-});

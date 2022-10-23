@@ -75,52 +75,37 @@ ws.on('connection', function(w){
 
 async function OrderStock(w, data){
   var method = data["Method"] 
-  var IsAuthed = await DataBase.CheckSession(data["Auth"], true);
-  
-  rtrnMsg = {}
-  if (!IsAuthed){
-    rtrnMsg = {
-      MessageType : "OrderRes",
-      Status : IsAuthed
-    }
-    w.send(JSON.stringify(data));
+  var rtrnMsg = {}
+  if (!await IsAuthed(data['Auth'])){
+    CannotOrderStock(w, 401)
     return;
   }
-  
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
-  var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
+  var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, price, method, data['Auth']);
+  var Status = 0
+  if (holdings[1] == true){
+    Status = 200;
+  }
   holdings = await UpdateHoldingsWithCurrentWorth(holdings[0])
   rtrnMsg = {
     MessageType : "OrderRes",
-    Status : holdings[1],
-    Holdings : holdings[0]
+    Status : Status,
+    Holdings : holdings
   }
   w.send(JSON.stringify(rtrnMsg));
 }
 
-
-
 async function InitMessage(w, msg) {
   var authed = false;
-  var holdings = [];
-  if (msg['Auth'] != null){ 
-    holdings = await DataBase.GetInitialData(msg['Auth'], w);
-    if (holdings["authed"] != false){
-      authed = true;
-      holdings = holdings["holdings"]
-      holdings = await UpdateHoldingsWithCurrentWorth(holdings)
-    }
+  var Holdings = [];
+  if (await IsAuthed(msg['Auth'])){ 
+    var ReturnInformation = await DataBase.GetInitialMessageReturnInfo(msg['Auth']);
+    Holdings = await UpdateHoldingsWithCurrentWorth(ReturnInformation)
+    authed = true;
   }
-  else{
-    authed = false;
-  }
-  var Stock = msg["Stock"];
-  var StockHistory = await StockHelper.GetChartData(Stock);
-  await AddSubscription(msg, w, Stock);
-  var stockPrice = StockPrices[Stock];
-  StockHistory = BuildStockHistoryMsg(StockHistory);
-  var data = await BuildInitReturnMsg(stockPrice, holdings,authed,StockHistory);
+  var ResponseRawData = await DataResponseForSubscription(w,msg);
+  var data = await BuildInitReturnMsg(ResponseRawData, authed, Holdings);
   w.send(JSON.stringify(data))
 }
 
@@ -136,33 +121,26 @@ async function UpdateHoldingsWithCurrentWorth(holdings) {
   return holdings
 }
 
-
-
-function BuildStockHistoryMsg(StockHistory){
-  var points = StockHistory["chart"]["result"][0]["timestamp"].length;
-  var data = []
-  for (let index = 0; index < points; index++) {
-    var period = {
-      "Time" : StockHistory["chart"]["result"][0]["timestamp"][index],
-      "Open" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["open"][index].toFixed(2),
-      "Close" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["close"][index].toFixed(2),
-      "High" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["high"][index].toFixed(2),
-      "Low" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["low"][index].toFixed(2),
-      "Volume" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["volume"][index]
-    }
-    data.push(period)
-  }
-  return data
+async function IsAuthed(Auth){
+  return Auth != null && await DataBase.IsUserAuthed(Auth)
 }
 
-async function BuildInitReturnMsg(stockPrice, holdings=null, authed, hist) {
+function CannotOrderStock(w, status){
+  var rtnMsg = {
+    MessageType : "OrderRes",
+    Status : 401
+  }
+  w.send(JSON.stringify(rtrnMsg));
+}
+
+async function BuildInitReturnMsg(RawData, authed,Holdings=null) {
 
   var data = {
     MessageType : "InitRes",
     Authed : authed,
-    Holdings : holdings,
-    PrevData : hist,
-    Price : stockPrice
+    Holdings : Holdings,
+    PrevData : RawData["StockHistory"],
+    Price : RawData["StockPrice"]
   }
   return data;
 }
@@ -170,21 +148,24 @@ async function BuildInitReturnMsg(stockPrice, holdings=null, authed, hist) {
 
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);
-  await AddSubscription(msg, w, msg["Stock"]);
-  var stockPrice = await StockPrices[msg["Stock"]]
-  var StockHistory = await StockHelper.GetChartData(msg["Stock"]);
-  StockHistory = BuildStockHistoryMsg(StockHistory)
-  var data = await BuildNewSubReturnMsg(stockPrice,StockHistory)
+  var ResponseRawData = await DataResponseForSubscription(w,msg);
+  var data = await BuildNewSubReturnMsg(ResponseRawData)
   w.send(JSON.stringify(data))
 }
 
+async function DataResponseForSubscription(w,msg){
+  var Stock = msg["Stock"]
+  await AddSubscription(w, Stock);
+  var StockHistory = await StockHelper.GetChartData(Stock);
+  var stockPrice = StockPrices[Stock];
+  return {"Stock" : Stock, StockHistory : StockHistory, StockPrice : stockPrice}
+}
 
-
-async function BuildNewSubReturnMsg(stockPrice, hist){
+async function BuildNewSubReturnMsg(RawData){
   var data = {
     MessageType : "ChangeSub",
-    Price : stockPrice,
-    PrevData :  hist
+    Price : RawData["StockPrice"],
+    PrevData :  RawData["StockHistory"]
   }
   return data;
 }
@@ -199,7 +180,7 @@ function RemoveCurrentSubscription(w){
 }
 
 
-async function AddSubscription(msg, w, stock) {
+async function AddSubscription(w, stock) {
   SocketStocks[w] = stock;
   if (stock in SubscribedStocks){
     SubscribedStocks[stock].push(w)  
