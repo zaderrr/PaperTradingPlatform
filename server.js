@@ -39,8 +39,3 @@ app.post('/CheckSession', async (req, res) => {
   return
 });
 
-
-app.post('/buyStock', async (req, res) => {
-  var data = req.cookies['SessionID']
-  
-});

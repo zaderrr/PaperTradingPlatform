@@ -65,8 +65,8 @@ function UserCanOrderStock(method,totalPrice,Amount,Stock,Holdings) {
   
   return false
 }
-async function OrderStock(Amount,Stock,price, method, Auth){
-  var client = await ConnectDatabase();
+const OrderStock = async function (Amount,Stock,price, method, Auth) {
+	var client = await ConnectDatabase();
   var UserID = await GetUserID(Auth, client)
   var stockHoldings = await GetHoldingsData(client, UserID, "")
   var Holdings = {}
@@ -98,7 +98,7 @@ async function OrderStock(Amount,Stock,price, method, Auth){
   var holds = await GetHoldingsData(client, UserID, "0.0");
   client.close();
   return [holds, CanOrder];
-}
+};
 
 async function NullOldTrades(trades, client){
   trades.forEach(async(trade) => {
@@ -132,9 +132,11 @@ async function CalcAvgPrice(trades){
 }
 
 
-  async function IsRegistered(client, data,){
-    var row = await client.get("SELECT * FROM Users WHERE Name=?",data["Name"]);
-    if (row == undefined){
+
+  async function RegisterUser(data){
+    var client = await ConnectDatabase();
+    var UserID = await client.get("SELECT * FROM USERS WHERE Name=?", [data["Name"]]);
+    if (UserID == undefined){
       return AddUserToDatabase(client,data["Name"], data["Password"])
     }else {
       client.close();
@@ -142,22 +144,21 @@ async function CalcAvgPrice(trades){
     }
   }
 
-  async function RegisterUser(data){
-    var client = await ConnectDatabase();
-    return await IsRegistered(client, data);
-  }
-
   async function AddUserToDatabase(client,user, pass) {
-    var hash = await bcrypt.hash(pass, 0, null);
+    var hash = await CreateHash(pass);
     var insert = await client.run("INSERT INTO Users (Name, Password) VALUES (?,?)", [user,hash]);
     var userId = insert.lastID;
     return AddTokenToDatabase(client,user,hash,userId)
   }
-  
+  async function CreateHash(input){
+    var hash = await bcrypt.hash(input, 0, null);
+    return hash;
+  }
   async function AddTokenToDatabase(client, user,hash, userid)
   {
-    var Token = await bcrypt.hash(user + hash,10, null)
+    var Token = await CreateHash(user + hash);
     await client.run("INSERT INTO Auth (FK_USER_ID, Token) VALUES (?,?)", [userid, Token]);  
+    await client.run("INSERT INTO Holdings (FK_USER_ID, Instrument, Amount) VALUES (?,?,?)", [userid,"Cash", 50000]);  
     client.close();
     return RegisterReturnData(true, Token)
   }
