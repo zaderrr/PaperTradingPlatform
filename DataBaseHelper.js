@@ -17,77 +17,95 @@ async function CreateDB()
 db.close();
 }
 
-
+//#region Callable functions from outside module
 // Checks database for Auth Token
-async function CheckSession (SessionID, NeedUserId=null){
-    var client = await ConnectDatabase();
-    var found = await IsValidAuth(SessionID, client, NeedUserId);
-    client.close();
-    return found;
+async function IsUserAuthed (Auth){
+  var client = await ConnectDatabase();
+  var found = await IsValidAuth(Auth, client);
+  client.close();
+  return found;
 }
+
+//Gets the return information for the initial message
+async function GetInitialMessageReturnInfo (Auth) {
+  var Client = await ConnectDatabase();
+  var UserID = await GetUserID(Auth, Client);
+  var Holdings = await GetHoldingsData(Client,UserID, "0.0");
+  return Holdings
+}
+//#endregion
+
+
+
+
+
   
 // Find auths with matching tokens. Will return undefined if none exist.
-async function IsValidAuth(SessionID, client, NeedUserId=null)
+async function IsValidAuth(Auth, client)
 {
-  var authFound = await client.get("SELECT * FROM Auth WHERE Token=?", SessionID);
+  var authFound = await GetUserID(Auth,client)
   if (authFound == undefined){
       return false;
   }else{
-    if (NeedUserId != null){
-      return ([true,authFound.FK_USER_ID])
-    }
-    return true
+      return true;
   }
 }
 
-async function OrderStock(Amount,Stock,UserID,price, method){
+async function GetUserID(Auth, client){
+  var details = await client.get("SELECT FK_USER_ID FROM Auth WHERE Token=?", Auth);
+  return details.FK_USER_ID
+}
+function UserCanOrderStock(method,totalPrice,Amount,Stock,Holdings) {
+  if (method == "Buy" && Holdings["Cash"]["Amount"] >= totalPrice){
+    return true
+  }
+  if (Holdings[Stock] != undefined && Holdings[Stock]["Amount"] >= Amount && Amount >=1 && method=="Sell"){
+    return true
+  }
+  
+  return false
+}
+async function OrderStock(Amount,Stock,price, method, Auth){
   var client = await ConnectDatabase();
-  var stockHoldings = await client.all("SELECT * FROM Holdings WHERE FK_USER_ID=?",[UserID]);
+  var UserID = await GetUserID(Auth, client)
+  var stockHoldings = await GetHoldingsData(client, UserID, "")
   var Holdings = {}
   stockHoldings.forEach(holding => {
     Holdings[holding["Instrument"]] = holding;
   });
-  var totalPrice = price * Amount
-  var CanOrder = false
-  
-  if (method == "Buy"){
-    if (Holdings["Cash"]["Amount"] >= totalPrice){
-      CanOrder = true;
-    }
-  }else if (method == "Sell"){
-    if (Holdings[Stock] != undefined && Holdings[Stock]["Amount"] >= Amount && Amount >=1){CanOrder = true;}
-  }else{
-    return undefined;
-  }
+  var totalPrice = price * Amount;
+  var CanOrder = UserCanOrderStock(method,totalPrice,Amount,Stock,Holdings)
   if (CanOrder){
     if (method == "Buy"){
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[(Holdings["Cash"]["Amount"] - totalPrice).toFixed(2), "Cash", UserID]);
-      await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,Amount,price, method])
+      await UpdateCashAmountAndInsertTrade(client,Holdings["Cash"]["Amount"] - totalPrice,UserID,Amount,price,method, Stock);
+      
     }else {
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[(Holdings["Cash"]["Amount"] + totalPrice).toFixed(2), "Cash",UserID]);
-      await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,-Amount,price, method])
+      await UpdateCashAmountAndInsertTrade(client,Holdings["Cash"]["Amount"] + totalPrice,UserID,-Amount,price,method, Stock);
     }
+
     if (Holdings[Stock] == undefined){
-      // If user doesn't currently own the stock
       await client.run("INSERT INTO HOLDINGS (FK_USER_ID, Instrument, Amount, Average_Price) VALUES (?,?,?,?)", [UserID,Stock,Amount,price])
     }else{
-      // If user does currently own the stock
       var avgPrice = Holdings[Stock]["Average_Price"];
       var trades = await client.all("SELECT TRADE_ID,Amount,Cost,Method FROM Trades WHERE FK_USER_ID=? AND INSTRUMENT=? AND Cost is not 0.0 AND Amount is not 0.0;",[UserID, Stock]);
       var calcs = await OrderCalc(avgPrice, Amount,Stock,Holdings,method, trades);
       if (calcs[0] == 0){
-        trades.forEach(async(trade) => {
-          await client.run("UPDATE Trades SET Cost=0, Amount=0, Closed_Cost=?, Closed_Amount=? WHERE TRADE_ID=?", [trade.Cost, trade.Amount,trade.TRADE_ID]);
-        })
+        await NullOldTrades(trades, client)
       }
-      await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=? WHERE Instrument = ? AND FK_USER_ID=?",[calcs[0], calcs[1],Stock,UserID]);
-    }    
+      await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=? WHERE Instrument = ? AND FK_USER_ID=?",[calcs[0], calcs[1],Stock,UserID]); 
+    }
   }
-  
-  var holds = await GetHoldingsData(client, UserID);
+  var holds = await GetHoldingsData(client, UserID, "0.0");
   client.close();
   return [holds, CanOrder];
 }
+
+async function NullOldTrades(trades, client){
+  trades.forEach(async(trade) => {
+    await client.run("UPDATE Trades SET Cost=0, Amount=0, Closed_Cost=?, Closed_Amount=? WHERE TRADE_ID=?", [trade.Cost, trade.Amount,trade.TRADE_ID]);
+  })
+}
+
 async function OrderCalc(avgPrice, Amount,Stock, Holdings, method, trades){
   if (method == "Buy"){
     Amount = Amount + Holdings[Stock]["Amount"]
@@ -160,24 +178,19 @@ async function CalcAvgPrice(trades){
     return client
   }
 
-  async function GetInitialData (Token) {
-    var client = await ConnectDatabase();
-    var authed = await IsValidAuth(Token, client, true)
-    if (authed[0]){
-      var holdings = await GetHoldingsData(client, authed[1]);
-      client.close();
-      return {authed : true, holdings : holdings}
-    }
-    else{
-      return {authed : false};
-    }
-  }
 
-  async function GetHoldingsData(client, userid) 
+  async function GetHoldingsData(client, userid,filter) 
   {
-     return await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=? AND Amount is not 0.0",userid);
+    var holdings =  await client.all("SELECT Instrument,Amount,Average_Price FROM Holdings WHERE FK_USER_ID=? AND Amount is not ?",[userid, filter]);
+    return holdings
   }
 
-
+  async function UpdateCashAmountAndInsertTrade(client,NewCashAmount, UserID,Amount,price,method,Stock){
+    await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[NewCashAmount.toFixed(2), "Cash", UserID]);
+    await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,Amount,price, method])
+  }
   
-  module.exports = { CheckSession, RegisterUser, GetInitialData, OrderStock};
+
+
+
+  module.exports = { IsUserAuthed, RegisterUser, GetInitialMessageReturnInfo, OrderStock};

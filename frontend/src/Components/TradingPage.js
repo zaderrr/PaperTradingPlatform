@@ -46,13 +46,14 @@ state = {
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
       if (msg['MessageType'] === "InitRes"){
+        console.log(msg)
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings'], StockHistory : msg['PrevData']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
       }else if (msg["MessageType"] === "ChangeSub"){
         _this.setState({BuyPrice : msg["Price"], StockHistory : msg['PrevData']})
       }
-      else if (msg["Status"] === true){
+      else if (msg["MessageType"] === "OrderRes" && msg["Status"] == 200){
       _this.setState({Holdings : msg['Holdings']});
       }
 
