@@ -39,9 +39,7 @@ async function IsValidAuth(SessionID, client, NeedUserId=null)
     return true
   }
 }
-async function BuyStock(){
 
-}
 async function OrderStock(Amount,Stock,UserID,price, method){
   var client = await ConnectDatabase();
   var stockHoldings = await client.all("SELECT * FROM Holdings WHERE FK_USER_ID=?",[UserID]);
@@ -63,10 +61,10 @@ async function OrderStock(Amount,Stock,UserID,price, method){
   }
   if (CanOrder){
     if (method == "Buy"){
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ?",[Holdings["Cash"]["Amount"] - totalPrice, "Cash"]);
+      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[Holdings["Cash"]["Amount"] - totalPrice, "Cash", UserID]);
       await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,Amount,price, method])
     }else {
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ?",[Holdings["Cash"]["Amount"] + totalPrice, "Cash"]);
+      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[Holdings["Cash"]["Amount"] + totalPrice, "Cash",UserID]);
       await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,-Amount,price, method])
     }
     if (Holdings[Stock] == undefined){
@@ -82,7 +80,7 @@ async function OrderStock(Amount,Stock,UserID,price, method){
           await client.run("UPDATE Trades SET Cost=0, Amount=0, Closed_Cost=?, Closed_Amount=? WHERE TRADE_ID=?", [trade.Cost, trade.Amount,trade.TRADE_ID]);
         })
       }
-      await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=? WHERE Instrument = ?",[calcs[0], calcs[1],Stock]);
+      await client.run("UPDATE HOLDINGS SET Amount=?, Average_Price=? WHERE Instrument = ? AND FK_USER_ID=?",[calcs[0], calcs[1],Stock,UserID]);
     }    
   }
   
@@ -111,7 +109,7 @@ async function CalcAvgPrice(trades){
   if (AmountSum == 0){
     return 0
   }
-  var avg =TotalCostSum/AmountSum; 
+  var avg =(TotalCostSum/AmountSum).toFixed(2); 
   return avg;
 }
 
