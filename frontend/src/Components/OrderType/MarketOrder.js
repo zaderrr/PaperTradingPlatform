@@ -22,7 +22,7 @@ class MarketOrder extends Component {
                 </button>
             </div>
             <div className="control">
-                <input id="StockAmount" className="input" type="text" placeholder='0.00'  />
+                <input id="StockAmount" autoComplete="off" className="input" type="number" onInput={this.props.OnAmountInput} placeholder='0.00'  />
             </div>
         </div>
         

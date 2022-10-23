@@ -76,7 +76,7 @@ ws.on('connection', function(w){
 async function OrderStock(w, data){
   var method = data["Method"] 
   var rtrnMsg = {}
-  if (!await IsAuthed(data['Auth'])){
+  if (!await IsAuthed(data['Auth'] || data["Amount"] == "" || data["Amount"] <= 0)){
     CannotOrderStock(w, 401)
     return;
   }

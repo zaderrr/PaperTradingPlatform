@@ -11,7 +11,8 @@ class StockPanel extends Component {
     super(props);
     this.state = {
       InfoToShow : <ChartComp stock={props.stock} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>,
-      CanRenderChart : false
+      CanRenderChart : false,
+      IsError : false
     };
 
   }
@@ -25,6 +26,9 @@ class StockPanel extends Component {
   componentDidUpdate(prevProp) {
     if (prevProp.StockData != this.props.StockData){
       this.setState({CanRenderChart : true});
+    }
+    else if (prevProp.Error != this.props.Error){
+      this.setState({IsError : this.props.Error[0]})
     }
   }
 
@@ -41,6 +45,10 @@ class StockPanel extends Component {
       element.classList.toggle("is-active");
       element.classList.toggle("is-dark");
     });
+  }
+
+  OnAmountInput = async (evt) => {
+    this.setState({IsError : false});
   }
 
 
@@ -107,10 +115,11 @@ class StockPanel extends Component {
               </div>
               <div className='OrderTypeFields'>
                 <div>
-                  <MarketOrder BuyPrice={this.props.BuyPrice}></MarketOrder>
+                  <MarketOrder BuyPrice={this.props.BuyPrice} OnAmountInput={this.OnAmountInput}></MarketOrder>
                 </div>
               </div>
-              <button onClick={this.props.OrderStock} className="button is-active BuySellButton">Order</button>
+                {this.state.IsError && <p  id="StockOrderError">{this.props.Error}</p> }
+              <button onClick={this.props.OrderStock} id="OrderButton"className="button is-active BuySellButton">Order</button>
             </div>
           </div>          
         </div>

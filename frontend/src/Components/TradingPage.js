@@ -46,7 +46,6 @@ state = {
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
       if (msg['MessageType'] === "InitRes"){
-        console.log(msg)
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings'], StockHistory : msg['PrevData']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
@@ -83,6 +82,11 @@ state = {
 
   OrderStock = async => {
     var amnt = document.getElementById("StockAmount").value;
+    if (amnt <= 0){
+       
+       this.setState({Error : [true ,"Please enter an amount"]});
+       return;
+     }
     var OrderType = document.getElementsByClassName("button is-active BuySellButton")[0].innerHTML;
     var data = {
       MessageType : "OrderStock",
@@ -186,7 +190,7 @@ state = {
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}> </Portfolio>}
-              {this.state.PanelToShow === "Chart" && <StockPanel Redraw={this.state.ReDrawChart} stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
+              {this.state.PanelToShow === "Chart" && <StockPanel Error={this.state.Error} Redraw={this.state.ReDrawChart} stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
      </div>
