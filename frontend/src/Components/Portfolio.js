@@ -23,7 +23,7 @@ class Portfolio extends Component {
           <td>{holding.Instrument}</td>
           <td>{holding.Amount}</td>
           <td>{holding.Average_Price}</td>
-          <td>{holding.Average_Price * holding.Amount}</td> 
+          <td>{holding.Instrument != "Cash" && holding.CurrentWorth}</td> 
         </tr>)}
 
           

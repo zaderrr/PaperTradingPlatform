@@ -61,10 +61,10 @@ async function OrderStock(Amount,Stock,UserID,price, method){
   }
   if (CanOrder){
     if (method == "Buy"){
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[Holdings["Cash"]["Amount"] - totalPrice, "Cash", UserID]);
+      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[(Holdings["Cash"]["Amount"] - totalPrice).toFixed(2), "Cash", UserID]);
       await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,Amount,price, method])
     }else {
-      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[Holdings["Cash"]["Amount"] + totalPrice, "Cash",UserID]);
+      await client.run("UPDATE HOLDINGS SET Amount=? WHERE Instrument = ? AND FK_USER_ID=?",[(Holdings["Cash"]["Amount"] + totalPrice).toFixed(2), "Cash",UserID]);
       await client.run("INSERT INTO Trades (FK_USER_ID, Instrument, Amount, Cost, Method) VALUES (?,?,?,?,?)", [UserID,Stock,-Amount,price, method])
     }
     if (Holdings[Stock] == undefined){

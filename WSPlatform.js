@@ -90,6 +90,7 @@ async function OrderStock(w, data){
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
   var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
+  holdings = await UpdateHoldingsWithCurrentWorth(holdings[0])
   rtrnMsg = {
     MessageType : "OrderRes",
     Status : holdings[1],
@@ -108,6 +109,7 @@ async function InitMessage(w, msg) {
     if (holdings["authed"] != false){
       authed = true;
       holdings = holdings["holdings"]
+      holdings = await UpdateHoldingsWithCurrentWorth(holdings)
     }
   }
   else{
@@ -120,6 +122,19 @@ async function InitMessage(w, msg) {
   StockHistory = BuildStockHistoryMsg(StockHistory);
   var data = await BuildInitReturnMsg(stockPrice, holdings,authed,StockHistory);
   w.send(JSON.stringify(data))
+}
+
+async function UpdateHoldingsWithCurrentWorth(holdings) {
+  for (let index = 0; index < holdings.length; index++) {
+    var stock = holdings[index].Instrument
+    if (stock != "Cash"){
+      console.log(stock)
+      var price = await GetStockPrice(stock);
+      var worth = (price * holdings[index].Amount).toFixed(2);
+      holdings[index]["CurrentWorth"] = worth
+    }
+  }
+  return holdings
 }
 
 
@@ -153,10 +168,6 @@ async function BuildInitReturnMsg(stockPrice, holdings=null, authed, hist) {
   return data;
 }
 
-async function GetRandomHistory(){
- var data = [Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20)]
-  return data
-}
 
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);

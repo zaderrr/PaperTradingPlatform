@@ -44,6 +44,7 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
+      console.log(msg)
       if (msg['MessageType'] === "InitRes"){
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings'], StockHistory : msg['PrevData']});
       }else if (msg["MessageType"] === "StockPrice"){
@@ -184,7 +185,7 @@ state = {
           <Search StockSelected={this.StockSelected} ShowSideMenu={this.ShowSideMenu}></Search>
         </div>
             <div className='MainArea'>
-              {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}></Portfolio>}
+              {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}> </Portfolio>}
               {this.state.PanelToShow === "Chart" && <StockPanel stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
