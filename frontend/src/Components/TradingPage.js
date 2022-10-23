@@ -20,6 +20,7 @@ state = {
     connection : null,
     BuyPrice : 0,
     Holdings : null,
+    ReDrawChart : false,
     StockHistory : null
   };
   componentDidMount() {
@@ -44,13 +45,11 @@ state = {
     // Log messages from the server
     connection.onmessage = function (e) {
       var msg = JSON.parse(e['data']);
-      console.log(msg)
       if (msg['MessageType'] === "InitRes"){
         _this.setState({BuyPrice : msg['Price'], Holdings : msg['Holdings'], StockHistory : msg['PrevData']});
       }else if (msg["MessageType"] === "StockPrice"){
         _this.setState({BuyPrice : msg['Price']});
       }else if (msg["MessageType"] === "ChangeSub"){
-        
         _this.setState({BuyPrice : msg["Price"], StockHistory : msg['PrevData']})
       }
       else if (msg["Status"] === true){
@@ -142,7 +141,7 @@ state = {
 
   ShowChart() 
   {
-    this.setState({PanelToShow : "Chart"})
+    this.setState({PanelToShow : "Chart", ReDrawChart : true})
   }
 
   
@@ -186,7 +185,7 @@ state = {
         </div>
             <div className='MainArea'>
               {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings = {this.state.Holdings}> </Portfolio>}
-              {this.state.PanelToShow === "Chart" && <StockPanel stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
+              {this.state.PanelToShow === "Chart" && <StockPanel Redraw={this.state.ReDrawChart} stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
             </div>
             </div>
      </div>

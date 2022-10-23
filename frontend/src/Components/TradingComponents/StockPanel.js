@@ -15,7 +15,11 @@ class StockPanel extends Component {
 
   }
   componentDidMount() {
+    if (this.props.StockData == null){
 
+    }else{
+        this.setState({CanRenderChart : true});
+    }
   }
   componentDidUpdate(prevProp) {
     if (prevProp.StockData != this.props.StockData){
@@ -80,7 +84,7 @@ class StockPanel extends Component {
                 </div>
               </div>
               <div className='MarketInfo'>
-                <ChartComp stock={this.props.stock} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>
+                <ChartComp stock={this.props.stock} render={this.state.CanRenderChart} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>
               </div>
             </div>
             <div className='BuyPanel'>

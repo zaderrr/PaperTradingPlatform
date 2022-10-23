@@ -13,8 +13,7 @@ componentDidMount(){
 }
 
   componentDidUpdate(prevProp) {
-    if (prevProp.StockData !== this.props.StockData){
-      console.log(this.props.StockData)
+    if (prevProp.render !== this.props.render || prevProp.StockData !== this.props.StockData){
       var data= []
       
       for (let index = 0; index < this.props.StockData.length; index++) {
@@ -27,7 +26,6 @@ componentDidMount(){
         }
         data.push(point)
       }
-      console.log(data)
       this.setState({Data : data, CanDrawGraph : true});
   }
 }

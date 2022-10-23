@@ -128,7 +128,6 @@ async function UpdateHoldingsWithCurrentWorth(holdings) {
   for (let index = 0; index < holdings.length; index++) {
     var stock = holdings[index].Instrument
     if (stock != "Cash"){
-      console.log(stock)
       var price = await GetStockPrice(stock);
       var worth = (price * holdings[index].Amount).toFixed(2);
       holdings[index]["CurrentWorth"] = worth
