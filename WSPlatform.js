@@ -46,8 +46,6 @@ setInterval(async () => {
       tableOut[s] = {Subscribers : SubscribedStocks[s].length, "Current Price" : stockPrice}
     }
   }
-  console.clear();
-  console.table(tableOut)
 }, interval);
 
 
@@ -91,7 +89,6 @@ async function OrderStock(w, data){
   
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
-  console.log(price)
   var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, IsAuthed[1], price, method);
   rtrnMsg = {
     MessageType : "OrderRes",
@@ -117,33 +114,67 @@ async function InitMessage(w, msg) {
     authed = false;
   }
   var Stock = msg["Stock"];
+  var StockHistory = await StockHelper.GetStockPrice(Stock);
   AddSubscription(msg, w, Stock);
   var stockPrice = StockPrices[Stock];
-  var data = await BuildInitReturnMsg(stockPrice, holdings);
+  StockHistory = BuildStockHistoryMsg(StockHistory)
+  var data = await BuildInitReturnMsg(stockPrice, holdings,authed, StockHistory);
   w.send(JSON.stringify(data))
 }
 
-async function BuildInitReturnMsg(stockPrice, holdings=null, authed) {
+function BuildStockHistoryMsg(StockHistory){
+  var points = StockHistory["chart"]["result"][0]["timestamp"].length;
+  var data = []
+  for (let index = 0; index < points; index++) {
+    var period = {
+      "Time" : StockHistory["chart"]["result"][0]["timestamp"][index],
+      "Open" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["open"][index].toFixed(2),
+      "Close" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["close"][index].toFixed(2),
+      "High" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["high"][index].toFixed(2),
+      "Low" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["low"][index].toFixed(2),
+      "Volume" : StockHistory["chart"]["result"][0]["indicators"]["quote"][0]["volume"][index]
+    }
+    data.push(period)
+    
+  }
+
+  return data
+}
+
+async function BuildInitReturnMsg(stockPrice, holdings=null, authed, hist) {
+
   var data = {
     MessageType : "InitRes",
     Authed : authed,
     Holdings : holdings,
+    PrevData : hist,
     Price : stockPrice
   }
   return data;
 }
+
+async function GetRandomHistory(){
+ var data = [Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20),Math.floor(Math.random() * 20)]
+  return data
+}
+
 async function ChangeSubscription(w,msg){
   RemoveCurrentSubscription(w);
   AddSubscription(msg, w, msg["Stock"]);
   var stockPrice = await StockPrices[msg["Stock"]]
-  var data = await BuildNewSubReturnMsg(stockPrice)
+  var StockHistory = await StockHelper.GetStockPrice(msg["Stock"]);
+  StockHistory = BuildStockHistoryMsg(StockHistory)
+  var data = await BuildNewSubReturnMsg(stockPrice,StockHistory)
   w.send(JSON.stringify(data))
 }
 
-async function BuildNewSubReturnMsg(stockPrice){
+
+
+async function BuildNewSubReturnMsg(stockPrice, hist){
   var data = {
-    MessageType : "StockPrice",
-    Price : stockPrice
+    MessageType : "ChangeSub",
+    Price : stockPrice,
+    PrevData :  hist
   }
   return data;
 }

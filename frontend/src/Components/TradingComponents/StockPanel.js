@@ -9,7 +9,8 @@ class StockPanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      InfoToShow : <ChartComp stock={props.stock}></ChartComp>,
+      InfoToShow : <ChartComp stock={props.stock} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>,
+      CanRenderChart : false
     };
 
   }
@@ -17,9 +18,8 @@ class StockPanel extends Component {
 
   }
   componentDidUpdate(prevProp) {
-    if (prevProp.stock != this.props.stock){
-      this.setState({InfoToShow : <ChartComp stock={this.props.stock}></ChartComp>}, () => {
-      });
+    if (prevProp.StockData != this.props.StockData){
+      this.setState({CanRenderChart : true});
     }
   }
 
@@ -80,7 +80,7 @@ class StockPanel extends Component {
                 </div>
               </div>
               <div className='MarketInfo'>
-                {this.state.InfoToShow}
+                <ChartComp stock={this.props.stock} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>
               </div>
             </div>
             <div className='BuyPanel'>
