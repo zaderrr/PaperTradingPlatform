@@ -5,6 +5,7 @@ import ModelsComp from './ModelsComp.js'
 import CompareComp from './CompareComp.js'
 import FinancialsComp from './FinancialsComp.js';
 import MarketOrder from '../OrderType/MarketOrder.js';
+import TradePanel from './TradePanel.js';
 class StockPanel extends Component {
   constructor(props) {
     super(props);
@@ -86,6 +87,7 @@ class StockPanel extends Component {
               <div className='MarketInfo'>
                 <ChartComp stock={this.props.stock} render={this.state.CanRenderChart} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>
               </div>
+              <TradePanel></TradePanel>
             </div>
             <div className='BuyPanel'>
               <div className="tabs is-centered test" >
@@ -109,11 +111,10 @@ class StockPanel extends Component {
                 </div>
               </div>
               <button onClick={this.props.OrderStock} className="button is-active BuySellButton">Order</button>
-                
-              
             </div>
-          </div>
+          </div>          
         </div>
+        
         <div className='NewsAndAbout'>
           <h1 className='title'>News & About</h1>
         </div>
