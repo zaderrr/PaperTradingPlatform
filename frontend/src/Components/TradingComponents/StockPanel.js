@@ -95,7 +95,7 @@ class StockPanel extends Component {
               <div className='MarketInfo'>
                 <ChartComp stock={this.props.stock} render={this.state.CanRenderChart} StockData={this.props.StockData} BuyPrice={this.props.BuyPrice}></ChartComp>
               </div>
-              <TradePanel></TradePanel>
+              <TradePanel Trades={this.props.Trades} stock ={this.props.stock} BuyPrice={this.props.BuyPrice}></TradePanel>
             </div>
             <div className='BuyPanel'>
               <div className="tabs is-centered test" >
