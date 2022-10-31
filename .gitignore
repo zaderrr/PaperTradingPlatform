@@ -24,4 +24,6 @@ yarn-error.log*
 
 config.js
 
+ServerConfig.json
+
 PLATFORM.db

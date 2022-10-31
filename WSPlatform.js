@@ -22,12 +22,12 @@ function GetSboxPrice() {
 async function GetStockPrice(stock)
 {
   if (PriceType == "Sandbox"){
-      return GetSboxPrice();
-    }
-    else {
-      var res = await StockHelper.GetPriceData(stock);
-      return res["quoteResponse"]["result"][0]["regularMarketPrice"];
-    }
+    return GetSboxPrice();
+  }
+  else {
+    var res = await StockHelper.GetPriceData(stock);
+    return res["quoteResponse"]["result"][0]["regularMarketPrice"].toFixed(2);
+  }
 }
 
 setInterval(async () => {
@@ -66,11 +66,11 @@ ws.on('connection', function(w){
   w.on('close', function() {
     var subbedStock = SocketStocks[w]
     const index = SubscribedStocks[subbedStock].indexOf(w);
-      if (index > -1) {
-        SubscribedStocks[subbedStock].splice(index, 1);
-      }
+    if (index > -1) {
+      SubscribedStocks[subbedStock].splice(index, 1);
+    }
   });
-
+  
 });
 
 async function OrderStock(w, data){
@@ -82,16 +82,18 @@ async function OrderStock(w, data){
   }
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
-  var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, price, method, data['Auth']);
+  var ReturnInfo = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, price, method, data['Auth']);
   var Status = 0
-  if (holdings[1] == true){
+  if (ReturnInfo[1] == true){
     Status = 200;
   }
-  holdings = await UpdateHoldingsWithCurrentWorth(holdings[0])
+  var holdings = await UpdateHoldingsWithCurrentWorth(ReturnInfo[0])
+  var trades = ReturnInfo[2]
   rtrnMsg = {
     MessageType : "OrderRes",
     Status : Status,
-    Holdings : holdings
+    Holdings : holdings,
+    Trades : trades
   }
   w.send(JSON.stringify(rtrnMsg));
 }
@@ -99,13 +101,14 @@ async function OrderStock(w, data){
 async function InitMessage(w, msg) {
   var authed = false;
   var Holdings = [];
+  var Trades = [];
   if (await IsAuthed(msg['Auth'])){ 
     var ReturnInformation = await DataBase.GetInitialMessageReturnInfo(msg['Auth']);
-    Holdings = await UpdateHoldingsWithCurrentWorth(ReturnInformation)
+    Holdings = await UpdateHoldingsWithCurrentWorth(ReturnInformation[0])
     authed = true;
   }
   var ResponseRawData = await DataResponseForSubscription(w,msg);
-  var data = await BuildInitReturnMsg(ResponseRawData, authed, Holdings);
+  var data = await BuildInitReturnMsg(ResponseRawData, authed, Holdings,ReturnInformation[1]);
   w.send(JSON.stringify(data))
 }
 
@@ -133,14 +136,15 @@ function CannotOrderStock(w, status){
   w.send(JSON.stringify(rtrnMsg));
 }
 
-async function BuildInitReturnMsg(RawData, authed,Holdings=null) {
-
+async function BuildInitReturnMsg(RawData, authed,Holdings=null, Trades=null) {
+  
   var data = {
     MessageType : "InitRes",
     Authed : authed,
     Holdings : Holdings,
     PrevData : RawData["StockHistory"],
-    Price : RawData["StockPrice"]
+    Price : RawData["StockPrice"],
+    Trades : Trades
   }
   return data;
 }
