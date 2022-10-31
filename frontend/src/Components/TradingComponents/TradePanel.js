@@ -18,7 +18,7 @@ class TradePanel extends Component {
             </tr>
           </thead>
           <tbody>
-            {this.props.Holdings !== undefined && this.props.Holdings.map(Holding =>
+            {this.props.Holdings != null && this.props.Holdings.map(Holding =>
               Holding.Instrument == this.props.stock && <tr key={Math.random()}>
                 <td>{Holding.Amount}</td>
                 <td>{Holding.Average_Price}</td>
