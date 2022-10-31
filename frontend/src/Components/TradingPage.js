@@ -53,7 +53,7 @@ class TradingPage extends React.Component {
         _this.setState({BuyPrice : msg["Price"], StockHistory : msg['PrevData']})
       }
       else if (msg["MessageType"] === "OrderRes" && msg["Status"] == 200){
-        _this.setState({Holdings : msg['Holdings']});
+        _this.setState({Holdings : msg['Holdings'], Trades : msg["Trades"]});
       }
       
     }
@@ -190,7 +190,7 @@ class TradingPage extends React.Component {
           </div>
           <div className='MainArea'>
             {this.state.PanelToShow === "Portfolio" && <Portfolio Holdings={this.state.Holdings}> </Portfolio>}
-            {this.state.PanelToShow === "Chart" && <StockPanel Trades={this.state.Trades}Error={this.state.Error} Redraw={this.state.ReDrawChart} stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock}></StockPanel>}
+            {this.state.PanelToShow === "Chart" && <StockPanel Trades={this.state.Trades}Error={this.state.Error} Redraw={this.state.ReDrawChart} stock={this.state.stock} StockData={this.state.StockHistory} BuyPrice={this.state.BuyPrice} FullName={this.state.FullName} connection={this.state.connection} OrderStock={this.OrderStock} Holdings= {this.state.Holdings}></StockPanel>}
           </div>
         </div>
       </div>

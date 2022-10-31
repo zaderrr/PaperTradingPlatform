@@ -103,8 +103,9 @@ const OrderStock = async function (Amount,Stock,price, method, Auth) {
     }
   }
   var holds = await GetHoldingsData(client, UserID, "0.0");
+  var trades = await GetUserTrades(UserID,client)
   client.close();
-  return [holds, CanOrder];
+  return [holds, CanOrder, trades];
 };
 
 async function NullOldTrades(trades, client){

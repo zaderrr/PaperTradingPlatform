@@ -1,7 +1,9 @@
 import React, { Component} from 'react';
 import './TradePanel.css'
 class TradePanel extends Component {
-
+  componentDidUpdate(){
+    console.log(this.props.BuyPrice)
+  }
   render() {
     return (
       <div className='TradePanel'>
@@ -9,22 +11,19 @@ class TradePanel extends Component {
         <table align='center'>
           <thead>
             <tr>
-              <th>Type</th>
               <th>Amount</th>
-              <th>Cost</th>
+              <th>Average Price</th>
               <th>Return</th>
-              <th>Status</th>
+
             </tr>
           </thead>
           <tbody>
-            {this.props.Trades != undefined && this.props.Trades.map(Trade =>
-              Trade.Instrument == this.props.stock && <tr key={Math.random()}>
-                <td>{Trade.Method}</td>
-                <td>{Trade.Amount}</td>
-                <td>{Trade.Cost}</td>
-                <td>{Trade.Status=="Active" && Trade.Amount * this.props.BuyPrice}</td>
-                <td>{Trade.Status}</td>
-
+            {this.props.Holdings !== undefined && this.props.Holdings.map(Holding =>
+              Holding.Instrument == this.props.stock && <tr key={Math.random()}>
+                <td>{Holding.Amount}</td>
+                <td>{Holding.Average_Price}</td>
+                <td>{(Holding.Average_Price - this.props.BuyPrice).toFixed(2)}</td> 
+                
               </tr>)}
           </tbody>
         </table>

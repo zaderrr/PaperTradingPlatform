@@ -1,7 +1,6 @@
 {
     "Stockprice" : {
-        "Interval" : 25000,
+        "Interval" : 10000,
         "Prices" : "Real"
-        
     }
 }

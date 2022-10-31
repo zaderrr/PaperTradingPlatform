@@ -26,7 +26,7 @@ async function GetStockPrice(stock)
   }
   else {
     var res = await StockHelper.GetPriceData(stock);
-    return res["quoteResponse"]["result"][0]["regularMarketPrice"];
+    return res["quoteResponse"]["result"][0]["regularMarketPrice"].toFixed(2);
   }
 }
 
@@ -82,16 +82,18 @@ async function OrderStock(w, data){
   }
   var subbedStock = data["Stock"];
   var price = StockPrices[subbedStock]
-  var holdings = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, price, method, data['Auth']);
+  var ReturnInfo = await DataBase.OrderStock(parseInt(data["Amount"]), subbedStock, price, method, data['Auth']);
   var Status = 0
-  if (holdings[1] == true){
+  if (ReturnInfo[1] == true){
     Status = 200;
   }
-  holdings = await UpdateHoldingsWithCurrentWorth(holdings[0])
+  var holdings = await UpdateHoldingsWithCurrentWorth(ReturnInfo[0])
+  var trades = ReturnInfo[2]
   rtrnMsg = {
     MessageType : "OrderRes",
     Status : Status,
-    Holdings : holdings
+    Holdings : holdings,
+    Trades : trades
   }
   w.send(JSON.stringify(rtrnMsg));
 }
